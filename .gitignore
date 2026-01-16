@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# Node
+node_modules/
+
+# Database
+instance/
+
+# macOS
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Test files
+test_*.py
+
+# IDE
+.vscode/
+.idea/

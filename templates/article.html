@@ -1,0 +1,471 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title or 'Reading' }} - Pocket Lite{% endblock %}
+
+{% block extra_styles %}
+/* Floating Toolbar */
+.toolbar {
+    position: fixed;
+    top: 32px;
+    right: 32px;
+    display: flex;
+    gap: 8px;
+    z-index: 1000;
+    padding: 8px;
+    background: var(--toolbar-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 28px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 24px var(--shadow-color);
+    opacity: 0;
+    transform: translateY(-10px);
+    animation: fadeInDown 0.5s ease 0.3s forwards;
+}
+
+@keyframes fadeInDown {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.toolbar button {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    background-color: transparent;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toolbar button:hover {
+    background-color: var(--bg-secondary);
+    color: var(--text-color);
+}
+
+.toolbar button.active {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.toolbar .btn-delete-article {
+    color: #DC3545;
+}
+
+.toolbar .btn-delete-article:hover {
+    background-color: #DC3545;
+    color: white;
+}
+
+.toolbar .divider {
+    width: 1px;
+    height: 24px;
+    background-color: var(--border-color);
+    margin: 8px 4px;
+}
+
+/* Back Navigation */
+.back-nav {
+    padding: 24px 0;
+    opacity: 0;
+    animation: fadeIn 0.5s ease 0.1s forwards;
+}
+
+@keyframes fadeIn {
+    to { opacity: 1; }
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.back-link:hover {
+    color: var(--accent-color);
+}
+
+.back-link svg {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.2s ease;
+}
+
+.back-link:hover svg {
+    transform: translateX(-3px);
+}
+
+/* Article Header */
+.article-header {
+    padding: 24px 0 48px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 48px;
+    opacity: 0;
+    animation: fadeIn 0.6s ease 0.2s forwards;
+}
+
+.article-title {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--text-color);
+    margin: 0;
+}
+
+/* Article Content */
+.article-content {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 1.35rem;
+    line-height: 1.85;
+    color: var(--text-color);
+    opacity: 0;
+    animation: fadeIn 0.6s ease 0.3s forwards;
+}
+
+/* Drop Cap for first paragraph */
+.article-content > p:first-of-type::first-letter {
+    float: left;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 4.5rem;
+    font-weight: 600;
+    line-height: 0.8;
+    margin: 0.1em 0.15em 0 0;
+    color: var(--accent-color);
+}
+
+.article-content p {
+    margin-bottom: 1.5em;
+    text-align: justify;
+    hyphens: auto;
+    -webkit-hyphens: auto;
+}
+
+/* Headlines within article */
+.article-content h1,
+.article-content h2,
+.article-content h3,
+.article-content h4,
+.article-content h5,
+.article-content h6 {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 2em 0 0.75em;
+    line-height: 1.3;
+}
+
+.article-content h2 {
+    font-size: 1.75rem;
+    padding-top: 1em;
+    border-top: 1px solid var(--border-color);
+}
+
+.article-content h3 {
+    font-size: 1.5rem;
+}
+
+.article-content h4 {
+    font-size: 1.25rem;
+}
+
+/* Section separator */
+.article-content hr {
+    border: none;
+    text-align: center;
+    margin: 3em 0;
+}
+
+.article-content hr::before {
+    content: '***';
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 1.5rem;
+    letter-spacing: 0.5em;
+    color: var(--text-muted);
+}
+
+/* Blockquotes */
+.article-content blockquote {
+    margin: 2em 0;
+    padding: 1.5em 2em;
+    border-left: 3px solid var(--accent-color);
+    background-color: var(--bg-secondary);
+    font-style: italic;
+    color: var(--text-secondary);
+}
+
+.article-content blockquote p {
+    margin-bottom: 0;
+}
+
+/* Lists */
+.article-content ul,
+.article-content ol {
+    margin: 1.5em 0;
+    padding-left: 1.5em;
+}
+
+.article-content li {
+    margin-bottom: 0.5em;
+}
+
+/* Article Footer */
+.article-footer {
+    margin-top: 64px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+    opacity: 0;
+    animation: fadeIn 0.6s ease 0.4s forwards;
+}
+
+.end-mark {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 1.5rem;
+    color: var(--accent-color);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .toolbar {
+        top: auto;
+        bottom: 24px;
+        right: 50%;
+        transform: translateX(50%) translateY(10px);
+        animation: fadeInUp 0.5s ease 0.3s forwards;
+    }
+
+    @keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateX(50%) translateY(0);
+        }
+    }
+
+    .article-title {
+        font-size: 1.75rem;
+    }
+
+    .article-content {
+        font-size: 1.15rem;
+        line-height: 1.75;
+    }
+
+    .article-content > p:first-of-type::first-letter {
+        font-size: 3.5rem;
+    }
+
+    .article-content p {
+        text-align: left;
+        hyphens: none;
+    }
+}
+
+/* Print styles */
+@media print {
+    .toolbar, .back-nav {
+        display: none !important;
+    }
+
+    body, body.night-mode {
+        background-color: white !important;
+        color: black !important;
+    }
+
+    body::before {
+        display: none;
+    }
+
+    .container-reading {
+        max-width: 100%;
+        padding: 0;
+        margin: 0;
+    }
+
+    .article-header {
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 24px;
+        margin-bottom: 24px;
+    }
+
+    .article-title {
+        font-size: 28pt;
+    }
+
+    .article-content {
+        font-size: 12pt;
+        line-height: 1.6;
+    }
+
+    .article-content > p:first-of-type::first-letter {
+        font-size: 48pt;
+        color: #333;
+    }
+
+    .article-content h2 {
+        border-top: 1px solid #ccc;
+    }
+
+    .article-footer {
+        border-top: 1px solid #ccc;
+    }
+
+    .end-mark {
+        color: #333;
+    }
+}
+{% endblock %}
+
+{% block content %}
+<!-- Reading Controls Toolbar -->
+<div class="toolbar">
+    <button onclick="decreaseFont()" title="Decrease font size">A−</button>
+    <button onclick="increaseFont()" title="Increase font size">A+</button>
+    <div class="divider"></div>
+    <button onclick="toggleNightMode()" id="nightModeBtn" title="Toggle night mode">
+        <svg id="modeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+    </button>
+    <button onclick="printArticle()" title="Print or Save as PDF">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+            <rect x="6" y="14" width="12" height="8"></rect>
+        </svg>
+    </button>
+    {% if article_id %}
+    <div class="divider"></div>
+    <button onclick="deleteArticle()" class="btn-delete-article" title="Delete article">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+    </button>
+    {% endif %}
+</div>
+
+<div class="container-reading">
+    <!-- Back Navigation -->
+    <nav class="back-nav">
+        <a href="/" class="back-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Library
+        </a>
+    </nav>
+
+    <!-- Article Header -->
+    {% if title %}
+    <header class="article-header">
+        <h1 class="article-title">{{ title }}</h1>
+    </header>
+    {% endif %}
+
+    <!-- Article Content -->
+    <article class="article-content" id="articleContent">
+        {{ content|safe }}
+    </article>
+
+    <!-- Article Footer -->
+    <footer class="article-footer">
+        <div class="end-mark">&#10045;</div>
+    </footer>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Font size control
+    let currentFontSize = 1.35;
+    const minFontSize = 1.0;
+    const maxFontSize = 1.8;
+    const articleContent = document.getElementById('articleContent');
+
+    function updateFontSize() {
+        articleContent.style.fontSize = currentFontSize + 'rem';
+        localStorage.setItem('fontSize', currentFontSize);
+    }
+
+    function increaseFont() {
+        if (currentFontSize < maxFontSize) {
+            currentFontSize = Math.round((currentFontSize + 0.1) * 10) / 10;
+            updateFontSize();
+        }
+    }
+
+    function decreaseFont() {
+        if (currentFontSize > minFontSize) {
+            currentFontSize = Math.round((currentFontSize - 0.1) * 10) / 10;
+            updateFontSize();
+        }
+    }
+
+    // Night mode control
+    const nightModeBtn = document.getElementById('nightModeBtn');
+    const modeIcon = document.getElementById('modeIcon');
+
+    const moonIcon = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+    const sunIcon = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+
+    function toggleNightMode() {
+        document.body.classList.toggle('night-mode');
+        const isNight = document.body.classList.contains('night-mode');
+        modeIcon.innerHTML = isNight ? sunIcon : moonIcon;
+        nightModeBtn.classList.toggle('active', isNight);
+        localStorage.setItem('nightMode', isNight);
+    }
+
+    // Load saved preferences
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load font size
+        const savedFontSize = localStorage.getItem('fontSize');
+        if (savedFontSize) {
+            currentFontSize = parseFloat(savedFontSize);
+            updateFontSize();
+        }
+
+        // Load night mode
+        const savedNightMode = localStorage.getItem('nightMode');
+        if (savedNightMode === 'true') {
+            document.body.classList.add('night-mode');
+            modeIcon.innerHTML = sunIcon;
+            nightModeBtn.classList.add('active');
+        }
+    });
+
+    // Delete article
+    function deleteArticle() {
+        if (confirm('Delete this article?')) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/delete/{{ article_id }}';
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+
+    // Print article
+    function printArticle() {
+        window.print();
+    }
+</script>
+{% endblock %}

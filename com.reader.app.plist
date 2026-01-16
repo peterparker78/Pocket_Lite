@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.reader.app</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/zahidbashir/Documents/Projects/Pocket_Lite/venv/bin/python</string>
+        <string>/Users/zahidbashir/Documents/Projects/Pocket_Lite/app.py</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/zahidbashir/Documents/Projects/Pocket_Lite</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/zahidbashir/Documents/Projects/Pocket_Lite/logs/app.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/zahidbashir/Documents/Projects/Pocket_Lite/logs/error.log</string>
+</dict>
+</plist>
