@@ -42,6 +42,8 @@ HARD_PAYWALL_SITES = [
     "bloomberg.com",
     "businessinsider.com",
     "barrons.com",
+    "thetimes.co.uk",
+    "telegraph.co.uk",
 ]
 
 # Sites that may respond to Google referer
@@ -490,13 +492,30 @@ def fetch_article_content(url):
 
         browser.close()
 
-        if not html_content:
-            # For hard paywall sites, try archive.is as fallback
-            if is_hard_paywall:
-                archive_result = fetch_from_archive_is(url)
-                if archive_result:
-                    return archive_result
-            return None
+    # Check if content is blocked (Access Denied, 403, etc.)
+    content_blocked = False
+    if html_content:
+        content_lower = html_content.lower()
+        if "access denied" in content_lower or "403 forbidden" in content_lower:
+            content_blocked = True
+            html_content = None
+
+    # For hard paywall sites, try Selenium fallback before archive.is
+    if not html_content and is_hard_paywall:
+        selenium_html = fetch_with_selenium_no_js(url)
+        if selenium_html:
+            # Check if Selenium got blocked too
+            selenium_lower = selenium_html.lower()
+            if "access denied" not in selenium_lower and "403 forbidden" not in selenium_lower:
+                html_content = selenium_html
+
+    # If still no content, try archive.is as last resort
+    if not html_content:
+        if is_hard_paywall:
+            archive_result = fetch_from_archive_is(url)
+            if archive_result:
+                return archive_result
+        return None
 
     # Parse with BeautifulSoup
     soup = BeautifulSoup(html_content, "html.parser")
