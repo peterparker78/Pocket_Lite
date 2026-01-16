@@ -281,16 +281,31 @@ def fetch_from_archive_is(url):
             # Check if we got redirected to an archive page or a "not found" page
             current_url = page.url
 
+            # Get page content for checks
+            page_content = page.content()
+
+            # Check for CAPTCHA/security challenge
+            captcha_indicators = [
+                "one more step",
+                "security check",
+                "captcha",
+                "please complete",
+                "verify you are human",
+                "cloudflare",
+            ]
+            page_lower = page_content.lower()
+            if any(indicator in page_lower for indicator in captcha_indicators):
+                browser.close()
+                return None
+
             # If still on archive.is/newest/, the page wasn't found
             if "/newest/" in current_url and "archive." in current_url:
-                # Check for "No results" or similar
-                page_content = page.content()
                 if "No results" in page_content or "not been archived" in page_content:
                     browser.close()
                     return None
 
             # We should now be on an archived page
-            html_content = page.content()
+            html_content = page_content
             browser.close()
 
             if not html_content or len(html_content) < 1000:
@@ -580,6 +595,24 @@ def fetch_article_content(url):
     # Clean up the article content
     cleaned_html = clean_article_html(article_element)
 
+    # Check if content looks like a CAPTCHA/security page
+    def looks_like_captcha(html_content):
+        """Detect if content is a CAPTCHA or security challenge page."""
+        if not html_content:
+            return False
+        content_lower = html_content.lower()
+        captcha_phrases = [
+            "one more step",
+            "security check",
+            "captcha",
+            "please complete",
+            "verify you are human",
+            "cloudflare",
+            "access denied",
+            "403 forbidden",
+        ]
+        return any(phrase in content_lower for phrase in captcha_phrases)
+
     # Check if content looks like a paywall page
     def looks_like_paywall(html_content):
         """Detect if content appears to be a paywall page."""
@@ -603,6 +636,10 @@ def fetch_article_content(url):
         phrase_count = sum(1 for phrase in paywall_phrases if phrase in content_lower)
         # If multiple paywall phrases or content is very short with one phrase
         return phrase_count >= 2 or (phrase_count >= 1 and len(html_content) < 500)
+
+    # Reject CAPTCHA pages entirely
+    if looks_like_captcha(cleaned_html):
+        return None
 
     if not cleaned_html or len(cleaned_html.strip()) < 50 or (is_hard_paywall and looks_like_paywall(cleaned_html)):
         # For hard paywall sites, try archive.is as fallback
