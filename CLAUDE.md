@@ -117,6 +117,21 @@ Pocket_Lite/
    - Custom User-Agent (Chrome 120 on macOS)
    - Images and CSS disabled for faster loading
 
+**`fetch_from_archive_is(url)`** - Fallback fetcher for hard paywalls:
+
+1. **Archive.is Lookup:**
+   - Constructs URL: `https://archive.is/newest/<encoded_url>`
+   - Navigates to most recent archived version
+   - Checks if archive exists (handles "No results" page)
+
+2. **Content Extraction:**
+   - Removes archive.is toolbar/header elements
+   - Uses same article selectors as main fetcher
+   - Cleans content with `clean_article_html()`
+
+3. **Returns:**
+   - Same format as `fetch_article_content()` plus `source: "archive.is"`
+
 **`PaywallDetector` class:**
 - `is_suspected_paywall(url)` - Checks against 13 known paywall sites
 - `contains_gateway_patterns(url)` - Detects /subscribe, /pay, /login paths
@@ -172,6 +187,36 @@ JavaScript is disabled for these sites:
 - nytimes.com (explicit check), wsj.com, medium.com, washingtonpost.com
 - hbr.org, economist.com, ft.com, bloomberg.com, theatlantic.com
 - newyorker.com, wired.com, thetimes.co.uk, telegraph.co.uk
+
+## Hard Paywall Bypass (utils.py)
+
+**Multi-Strategy Approach** for sites with server-side paywall detection:
+
+1. **User-Agent Spoofing:**
+   - Facebook crawler: `facebookexternalhit/1.1`
+   - Twitter crawler: `Twitterbot/1.0`
+   - Googlebot: `Googlebot/2.1`
+
+2. **Referer Spoofing:**
+   - Sets referer header to appear as if coming from Google, Facebook, or Twitter
+
+3. **Archive.is Fallback:**
+   - When direct fetch fails, attempts to retrieve cached version from archive.is
+   - Uses `https://archive.is/newest/<url>` to get most recent archived copy
+   - Works for articles that were archived before paywall was added
+
+**Hard Paywall Sites** (uses all bypass strategies):
+- ft.com, economist.com, wsj.com, bloomberg.com, businessinsider.com, barrons.com
+
+**`fetch_from_archive_is(url)`** function:
+- Fetches cached article from archive.is
+- Removes archive.is toolbar/header elements
+- Returns same format as `fetch_article_content()`
+- Added `source: "archive.is"` field to indicate cached content
+
+**Paywall Detection:**
+- Checks for paywall phrases: "subscribe to continue", "subscribers only", etc.
+- If content appears to be paywall page, tries archive.is fallback
 
 ## Blocked Domains (utils.py)
 

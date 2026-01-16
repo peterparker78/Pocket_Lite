@@ -53,6 +53,9 @@ GOOGLE_REFERER_SITES = [
     "newyorker.com",
 ]
 
+# Archive.is base URL for cached content
+ARCHIVE_IS_URL = "https://archive.is/newest/"
+
 # Domains to block (ads, analytics, trackers)
 BLOCKED_DOMAINS = [
     "doubleclick",
@@ -242,6 +245,117 @@ def fetch_with_selenium_no_js(url):
     return None
 
 
+def fetch_from_archive_is(url):
+    """
+    Fetch article content from archive.is as a fallback for hard paywalls.
+
+    Archive.is (also known as archive.today) caches web pages. Many paywall
+    sites have their content cached before the paywall was added or by users
+    who had access.
+
+    Args:
+        url: The original article URL to find in archive.is
+
+    Returns:
+        Dict with 'title', 'text', 'original_url', or None if not found
+    """
+    import urllib.parse
+
+    archive_url = ARCHIVE_IS_URL + urllib.parse.quote(url, safe="")
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        context = browser.new_context(
+            user_agent=USER_AGENT,
+            viewport={"width": 1920, "height": 1080},
+        )
+        page = context.new_page()
+
+        try:
+            # Navigate to archive.is with the original URL
+            page.goto(archive_url, wait_until="networkidle", timeout=30000)
+            time.sleep(2)
+
+            # Check if we got redirected to an archive page or a "not found" page
+            current_url = page.url
+
+            # If still on archive.is/newest/, the page wasn't found
+            if "/newest/" in current_url and "archive." in current_url:
+                # Check for "No results" or similar
+                page_content = page.content()
+                if "No results" in page_content or "not been archived" in page_content:
+                    browser.close()
+                    return None
+
+            # We should now be on an archived page
+            html_content = page.content()
+            browser.close()
+
+            if not html_content or len(html_content) < 1000:
+                return None
+
+        except Exception as e:
+            browser.close()
+            return None
+
+    # Parse the archived content
+    soup = BeautifulSoup(html_content, "html.parser")
+
+    # Archive.is wraps content in a specific structure
+    # Look for the archived page content
+    archived_content = soup.find("div", id="CONTENT") or soup.find("body")
+
+    if not archived_content:
+        return None
+
+    # Remove archive.is toolbar/header elements
+    for el in soup.find_all(["div", "header", "nav"], class_=lambda x: x and any(
+        kw in str(x).lower() for kw in ["toolbar", "archive", "header", "nav"]
+    )):
+        el.decompose()
+
+    # Extract title
+    title = None
+    title_tag = soup.find("title")
+    if title_tag:
+        title = title_tag.get_text(strip=True)
+        # Clean up archive.is title suffix
+        if " - archive" in title.lower():
+            title = title.rsplit(" - ", 1)[0]
+
+    h1_tag = soup.find("h1")
+    if h1_tag:
+        h1_text = h1_tag.get_text(strip=True)
+        if h1_text and (not title or len(h1_text) > 10):
+            title = h1_text
+
+    # Find article content using standard selectors
+    article_element = None
+    for selector in ARTICLE_SELECTORS:
+        article_element = soup.select_one(selector)
+        if article_element:
+            break
+
+    if not article_element:
+        article_element = soup.find("body")
+
+    if not article_element:
+        return None
+
+    # Clean the content
+    cleaned_html = clean_article_html(article_element)
+
+    if not cleaned_html or len(cleaned_html.strip()) < 100:
+        return None
+
+    return {
+        "title": title,
+        "text": cleaned_html,
+        "original_url": url,
+        "source": "archive.is",
+    }
+
+
 def fetch_article_content(url):
     """
     Fetch article content using Playwright with anti-bot measures.
@@ -377,6 +491,11 @@ def fetch_article_content(url):
         browser.close()
 
         if not html_content:
+            # For hard paywall sites, try archive.is as fallback
+            if is_hard_paywall:
+                archive_result = fetch_from_archive_is(url)
+                if archive_result:
+                    return archive_result
             return None
 
     # Parse with BeautifulSoup
@@ -442,7 +561,36 @@ def fetch_article_content(url):
     # Clean up the article content
     cleaned_html = clean_article_html(article_element)
 
-    if not cleaned_html or len(cleaned_html.strip()) < 50:
+    # Check if content looks like a paywall page
+    def looks_like_paywall(html_content):
+        """Detect if content appears to be a paywall page."""
+        if not html_content:
+            return True
+        content_lower = html_content.lower()
+        # Common paywall phrases
+        paywall_phrases = [
+            "subscribe to continue",
+            "subscribe to read",
+            "subscribers only",
+            "subscription required",
+            "become a subscriber",
+            "sign up to continue",
+            "create an account to continue",
+            "register to continue reading",
+            "this article is for subscribers",
+            "to read the full story",
+            "already a subscriber?",
+        ]
+        phrase_count = sum(1 for phrase in paywall_phrases if phrase in content_lower)
+        # If multiple paywall phrases or content is very short with one phrase
+        return phrase_count >= 2 or (phrase_count >= 1 and len(html_content) < 500)
+
+    if not cleaned_html or len(cleaned_html.strip()) < 50 or (is_hard_paywall and looks_like_paywall(cleaned_html)):
+        # For hard paywall sites, try archive.is as fallback
+        if is_hard_paywall:
+            archive_result = fetch_from_archive_is(url)
+            if archive_result:
+                return archive_result
         return None
 
     return {
