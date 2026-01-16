@@ -578,22 +578,30 @@ def fetch_article_content(url):
         if h1_text and (not title or len(h1_text) > 10):
             title = h1_text
 
-    # Find article content element
+    # Find article content element with minimum content threshold
+    # Some sites have small <article> elements for widgets/sidebars
+    MIN_CONTENT_LENGTH = 500
     article_element = None
+    cleaned_html = None
+
     for selector in ARTICLE_SELECTORS:
-        article_element = soup.select_one(selector)
-        if article_element:
-            break
+        candidate = soup.select_one(selector)
+        if candidate:
+            candidate_html = clean_article_html(candidate)
+            if candidate_html and len(candidate_html) >= MIN_CONTENT_LENGTH:
+                article_element = candidate
+                cleaned_html = candidate_html
+                break
 
-    # Fallback to body
+    # If no selector met threshold, try body
     if not article_element:
-        article_element = soup.find("body")
+        body = soup.find("body")
+        if body:
+            article_element = body
+            cleaned_html = clean_article_html(body)
 
-    if not article_element:
+    if not article_element or not cleaned_html:
         return None
-
-    # Clean up the article content
-    cleaned_html = clean_article_html(article_element)
 
     # Check if content looks like a CAPTCHA/security page
     def looks_like_captcha(html_content):
