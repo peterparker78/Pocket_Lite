@@ -317,6 +317,51 @@ ARTICLE_SELECTORS = [
 ]
 ```
 
+## Known Limitations
+
+### Sites That Cannot Be Bypassed
+
+The following sites have **hard paywalls** with server-side authentication that cannot be bypassed:
+
+| Site | Reason |
+|------|--------|
+| **thetimes.co.uk** | Requires paid subscription; article content not loaded without auth |
+| **ft.com** | Financial Times uses strict server-side paywall |
+| **wsj.com** | Wall Street Journal requires subscription |
+| **economist.com** | Hard paywall with authentication check |
+
+These premium publishers have invested heavily in paywall technology specifically designed to prevent automated access. The page structure loads, but actual article paragraphs are only delivered after authentication.
+
+### Archive.is Limitations
+
+- **CAPTCHA blocking**: Archive.is uses CAPTCHAs to block automated access
+- The app detects CAPTCHA pages and returns an error instead of displaying them
+- Archive.is fallback only works when:
+  - Rate limits haven't been triggered
+  - The specific article was previously archived
+  - No CAPTCHA challenge is presented
+
+### Sites That Work
+
+| Site | Method |
+|------|--------|
+| **telegraph.co.uk** | Selenium fallback (JS disabled) |
+| **nytimes.com** | Playwright with JS disabled |
+| **washingtonpost.com** | Google referer spoofing |
+| **medium.com** | JS disabled bypass |
+| **paulgraham.com** | Legacy HTML extraction |
+| Most blogs/news sites | Standard extraction |
+
+### Fallback Chain
+
+When fetching articles, the app tries these methods in order:
+
+1. **Playwright** with multiple User-Agent strategies (Googlebot, Facebook, Twitter)
+2. **Selenium** with JS disabled (for sites blocking Playwright)
+3. **Archive.is** cached version (if available and no CAPTCHA)
+
+If all methods fail, the app returns "Could not extract content" error.
+
 ## Troubleshooting
 
 **ModuleNotFoundError: No module named 'selenium'**
