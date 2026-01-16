@@ -21,6 +21,38 @@ USER_AGENT = (
     "Chrome/120.0.0.0 Safari/537.36"
 )
 
+# Googlebot User-Agent (some sites show full content to crawlers)
+GOOGLEBOT_USER_AGENT = (
+    "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+)
+
+# Facebook crawler User-Agent (sites often allow for social sharing previews)
+FACEBOOK_USER_AGENT = (
+    "facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)"
+)
+
+# Twitter crawler User-Agent
+TWITTER_USER_AGENT = "Twitterbot/1.0"
+
+# Sites with hard paywalls - try multiple bypass strategies
+HARD_PAYWALL_SITES = [
+    "ft.com",
+    "economist.com",
+    "wsj.com",
+    "bloomberg.com",
+    "businessinsider.com",
+    "barrons.com",
+]
+
+# Sites that may respond to Google referer
+GOOGLE_REFERER_SITES = [
+    "nytimes.com",
+    "washingtonpost.com",
+    "theatlantic.com",
+    "wired.com",
+    "newyorker.com",
+]
+
 # Domains to block (ads, analytics, trackers)
 BLOCKED_DOMAINS = [
     "doubleclick",
@@ -229,15 +261,21 @@ def fetch_article_content(url):
         Dict with 'title', 'text', 'original_url', or None if fetch failed
     """
     paywall_detector = PaywallDetector()
+    url_lower = url.lower()
+
+    # Check if this is a hard paywall site
+    is_hard_paywall = any(site in url_lower for site in HARD_PAYWALL_SITES)
 
     # Check if JavaScript should be disabled
-    # Specifically disable JS for nytimes.com and other paywall sites
-    is_nytimes = "nytimes.com" in url.lower()
+    is_nytimes = "nytimes.com" in url_lower
     disable_js = (
         is_nytimes or
         paywall_detector.is_suspected_paywall(url) or
         paywall_detector.contains_gateway_patterns(url)
     )
+
+    # Check if site needs Google referer
+    use_google_referer = any(site in url_lower for site in GOOGLE_REFERER_SITES)
 
     def block_requests(route):
         """Intercept and block unwanted requests."""
@@ -259,39 +297,87 @@ def fetch_article_content(url):
         # Allow all other requests
         route.continue_()
 
-    with sync_playwright() as p:
-        # Launch headless Chromium
-        browser = p.chromium.launch(headless=True)
+    def try_fetch_with_strategy(browser, user_agent, referer=None, js_enabled=True):
+        """Try fetching with a specific strategy."""
+        context_options = {
+            "user_agent": user_agent,
+            "viewport": {"width": 1920, "height": 1080},
+            "java_script_enabled": js_enabled,
+        }
 
-        # Create context with spoofed User-Agent and viewport
-        # Specifically disable JavaScript for nytimes.com and paywall sites
-        context = browser.new_context(
-            user_agent=USER_AGENT,
-            viewport={"width": 1920, "height": 1080},
-            java_script_enabled=not disable_js,
-        )
+        if referer:
+            context_options["extra_http_headers"] = {
+                "Referer": referer,
+            }
 
+        context = browser.new_context(**context_options)
         page = context.new_page()
-
-        # Set up request interception for ad blocking
         page.route("**/*", block_requests)
 
         try:
-            # Navigate to URL and wait for content
             page.goto(url, wait_until="networkidle", timeout=30000)
-
-            # Random delay to mimic human reading (1-3 seconds)
-            delay = random.uniform(1, 3)
-            time.sleep(delay)
-
-            # Get the full HTML content
-            html_content = page.content()
-
-        except Exception as e:
-            browser.close()
+            time.sleep(random.uniform(1, 2))
+            html = page.content()
+            context.close()
+            return html
+        except Exception:
+            context.close()
             return None
 
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        html_content = None
+
+        # For hard paywall sites, try multiple strategies
+        if is_hard_paywall:
+            strategies = [
+                # Try Facebook crawler (best for social sharing previews)
+                (FACEBOOK_USER_AGENT, "https://www.facebook.com/", False),
+                # Try Twitter crawler
+                (TWITTER_USER_AGENT, "https://t.co/", False),
+                # Try Googlebot
+                (GOOGLEBOT_USER_AGENT, "https://www.google.com/", False),
+                # Try normal with Google referer
+                (USER_AGENT, "https://www.google.com/", not disable_js),
+            ]
+
+            for user_agent, referer, js_enabled in strategies:
+                html_content = try_fetch_with_strategy(browser, user_agent, referer, js_enabled)
+                if html_content and len(html_content) > 5000:
+                    # Check if we got actual content (not just paywall page)
+                    if "subscribe" not in html_content.lower()[:2000] or len(html_content) > 20000:
+                        break
+                html_content = None
+        else:
+            # Standard approach for other sites
+            context_options = {
+                "user_agent": USER_AGENT,
+                "viewport": {"width": 1920, "height": 1080},
+                "java_script_enabled": not disable_js,
+            }
+
+            if use_google_referer:
+                context_options["extra_http_headers"] = {
+                    "Referer": "https://www.google.com/",
+                }
+
+            context = browser.new_context(**context_options)
+            page = context.new_page()
+            page.route("**/*", block_requests)
+
+            try:
+                page.goto(url, wait_until="networkidle", timeout=30000)
+                delay = random.uniform(1, 3)
+                time.sleep(delay)
+                html_content = page.content()
+            except Exception:
+                browser.close()
+                return None
+
         browser.close()
+
+        if not html_content:
+            return None
 
     # Parse with BeautifulSoup
     soup = BeautifulSoup(html_content, "html.parser")
