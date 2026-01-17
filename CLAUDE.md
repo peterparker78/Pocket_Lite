@@ -69,6 +69,7 @@ Hard paywall sites (ft.com, economist.com, wsj.com, bloomberg.com, etc.) try all
 |----------|---------|
 | `HARD_PAYWALL_SITES` | Sites that use multi-strategy bypass |
 | `GOOGLE_REFERER_SITES` | Sites that respond to Google referer header |
+| `CRAWLER_BYPASS_SITES` | Sites that show full content to crawler user agents (e.g., Substack) |
 | `BLOCKED_DOMAINS` | Ad/analytics domains blocked during fetch |
 | `PAYWALL_ELEMENT_PATTERNS` | CSS classes/IDs removed before extraction |
 | `ARTICLE_SELECTORS` | CSS selectors tried in order to find article body |
@@ -94,12 +95,13 @@ class Article:
 - Only works if article was previously archived
 
 **Sites that work**:
-- telegraph.co.uk (Selenium), nytimes.com (JS disabled), washingtonpost.com (Google referer), medium.com, paulgraham.com
+- substack.com (crawler UA), telegraph.co.uk (Selenium), nytimes.com (JS disabled), washingtonpost.com (Google referer), medium.com, paulgraham.com
 
 ## Customization
 
 Edit these in `utils.py`:
 - `PAYWALL_SITES` in `PaywallDetector` - Add new paywall sites
+- `CRAWLER_BYPASS_SITES` - Add sites that show full content to Googlebot
 - `BLOCKED_DOMAINS` - Add new ad/tracker domains
 - `PAYWALL_ELEMENT_PATTERNS` - Add new paywall element patterns
 - `ARTICLE_SELECTORS` - Add new content selectors

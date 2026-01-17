@@ -55,6 +55,11 @@ GOOGLE_REFERER_SITES = [
     "newyorker.com",
 ]
 
+# Sites that show full content to crawler user agents (for SEO/social sharing)
+CRAWLER_BYPASS_SITES = [
+    "substack.com",
+]
+
 # Archive.is base URL for cached content
 ARCHIVE_IS_URL = "https://archive.is/newest/"
 
@@ -94,6 +99,8 @@ PAYWALL_ELEMENT_PATTERNS = [
 
 # Article body selectors (in order of preference)
 ARTICLE_SELECTORS = [
+    ".available-content",  # Substack
+    ".body.markup",  # Substack alternative
     "article",
     "main",
     "[role='main']",
@@ -408,6 +415,9 @@ def fetch_article_content(url):
     # Check if site needs Google referer
     use_google_referer = any(site in url_lower for site in GOOGLE_REFERER_SITES)
 
+    # Check if site responds to crawler user agents (e.g., Substack)
+    use_crawler_ua = any(site in url_lower for site in CRAWLER_BYPASS_SITES)
+
     def block_requests(route):
         """Intercept and block unwanted requests."""
         request = route.request
@@ -479,6 +489,11 @@ def fetch_article_content(url):
                     if "subscribe" not in html_content.lower()[:2000] or len(html_content) > 20000:
                         break
                 html_content = None
+        elif use_crawler_ua:
+            # Sites that show full content to crawlers (e.g., Substack)
+            html_content = try_fetch_with_strategy(
+                browser, GOOGLEBOT_USER_AGENT, "https://www.google.com/", True
+            )
         else:
             # Standard approach for other sites
             context_options = {
