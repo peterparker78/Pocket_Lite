@@ -8,7 +8,7 @@ Pocket Lite is a distraction-free reading web app. Users paste a URL, and the ap
 
 ## Tech Stack
 
-- Python 3.14 with Flask
+- Python 3.12+ with Flask
 - Flask-SQLAlchemy with SQLite (`instance/articles.db`)
 - Playwright for headless browser fetching
 - Selenium with webdriver-manager as fallback
@@ -28,8 +28,11 @@ python -c "from app import app, db; app.app_context().push(); db.create_all()"
 # Run server (http://127.0.0.1:5000)
 python app.py
 
-# Run utils.py tests
+# Run utils.py self-tests (PaywallDetector + fetch tests)
 python utils.py
+
+# Run integration tests (requires server running)
+python test_final.py
 ```
 
 ## Architecture
