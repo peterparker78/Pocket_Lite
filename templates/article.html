@@ -225,6 +225,93 @@
     margin-bottom: 0.5em;
 }
 
+/* Tags */
+.article-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 20px;
+    align-items: center;
+}
+
+.tag-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tag-badge:hover {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+    color: white;
+}
+
+.tag-badge .remove-tag {
+    font-size: 1rem;
+    line-height: 1;
+    opacity: 0.6;
+}
+
+.tag-badge:hover .remove-tag {
+    opacity: 1;
+}
+
+.tag-input-wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tag-input {
+    padding: 6px 12px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.8125rem;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    width: 120px;
+    transition: all 0.2s ease;
+}
+
+.tag-input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    width: 160px;
+}
+
+.tag-input::placeholder {
+    color: var(--text-muted);
+}
+
+.btn-add-tag {
+    padding: 6px 14px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    border: 1px solid var(--accent-color);
+    border-radius: 20px;
+    background-color: transparent;
+    color: var(--accent-color);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-add-tag:hover {
+    background-color: var(--accent-color);
+    color: white;
+}
+
 /* Article Footer */
 .article-footer {
     margin-top: 64px;
@@ -350,6 +437,15 @@
             <rect x="6" y="14" width="12" height="8"></rect>
         </svg>
     </button>
+    {% if original_url %}
+    <button onclick="window.open('{{ original_url }}', '_blank')" title="Open original article">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <line x1="10" y1="14" x2="21" y2="3"></line>
+        </svg>
+    </button>
+    {% endif %}
     {% if article_id %}
     <div class="divider"></div>
     <button onclick="deleteArticle()" class="btn-delete-article" title="Delete article">
@@ -377,6 +473,17 @@
     {% if title %}
     <header class="article-header">
         <h1 class="article-title">{{ title }}</h1>
+        {% if article_id %}
+        <div class="article-tags" id="tagsContainer">
+            {% for tag in tags %}
+            <span class="tag-badge" onclick="removeTag('{{ tag }}')">{{ tag }}<span class="remove-tag">×</span></span>
+            {% endfor %}
+            <div class="tag-input-wrapper">
+                <input type="text" class="tag-input" id="tagInput" placeholder="Add tag..." onkeypress="handleTagKeypress(event)">
+                <button class="btn-add-tag" onclick="addTag()">Add</button>
+            </div>
+        </div>
+        {% endif %}
     </header>
     {% endif %}
 
@@ -466,6 +573,61 @@
     // Print article
     function printArticle() {
         window.print();
+    }
+
+    // Tag management
+    let currentTags = {{ tags|tojson if tags else '[]' }};
+
+    function updateTagsUI() {
+        const container = document.getElementById('tagsContainer');
+        if (!container) return;
+
+        let html = '';
+        currentTags.forEach(tag => {
+            html += `<span class="tag-badge" onclick="removeTag('${tag}')">${tag}<span class="remove-tag">×</span></span>`;
+        });
+        html += `<div class="tag-input-wrapper">
+            <input type="text" class="tag-input" id="tagInput" placeholder="Add tag..." onkeypress="handleTagKeypress(event)">
+            <button class="btn-add-tag" onclick="addTag()">Add</button>
+        </div>`;
+        container.innerHTML = html;
+    }
+
+    function saveTags() {
+        fetch('/update-tags/{{ article_id }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tags: currentTags.join(',') })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                currentTags = data.tags;
+                updateTagsUI();
+            }
+        });
+    }
+
+    function addTag() {
+        const input = document.getElementById('tagInput');
+        const tag = input.value.trim().toLowerCase();
+        if (tag && !currentTags.includes(tag)) {
+            currentTags.push(tag);
+            saveTags();
+        }
+        input.value = '';
+    }
+
+    function removeTag(tag) {
+        currentTags = currentTags.filter(t => t !== tag);
+        saveTags();
+    }
+
+    function handleTagKeypress(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            addTag();
+        }
     }
 </script>
 {% endblock %}

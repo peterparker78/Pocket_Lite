@@ -44,6 +44,8 @@ HARD_PAYWALL_SITES = [
     "barrons.com",
     "thetimes.co.uk",
     "telegraph.co.uk",
+    "theathletic.com",
+    "nytimes.com/athletic",
 ]
 
 # Sites that may respond to Google referer
@@ -58,6 +60,8 @@ GOOGLE_REFERER_SITES = [
 # Sites that show full content to crawler user agents (for SEO/social sharing)
 CRAWLER_BYPASS_SITES = [
     "substack.com",
+    "newscientist.com",
+    "nytimes.com",
 ]
 
 # Archive.is base URL for cached content
@@ -472,11 +476,13 @@ def fetch_article_content(url):
         # For hard paywall sites, try multiple strategies
         if is_hard_paywall:
             strategies = [
+                # Try Googlebot with JS enabled (works for Athletic/NYT)
+                (GOOGLEBOT_USER_AGENT, "https://www.google.com/", True),
                 # Try Facebook crawler (best for social sharing previews)
                 (FACEBOOK_USER_AGENT, "https://www.facebook.com/", False),
                 # Try Twitter crawler
                 (TWITTER_USER_AGENT, "https://t.co/", False),
-                # Try Googlebot
+                # Try Googlebot without JS
                 (GOOGLEBOT_USER_AGENT, "https://www.google.com/", False),
                 # Try normal with Google referer
                 (USER_AGENT, "https://www.google.com/", not disable_js),
@@ -720,10 +726,13 @@ def clean_article_html(element):
         element_id = (el.get("id", "") or "").lower()
 
         # Check for patterns to remove
+        # Note: patterns should be specific to avoid false positives
+        # e.g., "ad-" would match "lead-article", so use "ad-slot", "ad-container" etc.
         remove_patterns = [
-            "paywall", "subscribe", "advertisement", "ad-", "social",
-            "share", "related", "newsletter", "signup", "popup", "modal",
-            "sidebar", "comment", "footer", "header", "nav", "menu",
+            "paywall", "subscribe", "advertisement", "ad-slot", "ad-container",
+            "ad-wrapper", "social-share", "share-button",
+            "related-articles", "newsletter", "signup", "popup", "modal",
+            "sidebar", "comment", "footer-", "header-nav", "nav-bar", "menu-",
             "author-bio", "byline-", "metadata", "timestamp",
         ]
 

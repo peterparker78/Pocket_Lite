@@ -275,6 +275,63 @@ body.night-mode .btn-delete:hover {
     background-color: rgba(220, 53, 69, 0.15);
 }
 
+/* Tag Filter */
+.tag-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.tag-filter-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.tag-filter-badge:hover {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+}
+
+.tag-filter-badge.active {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+    color: white;
+}
+
+/* Article Tags (small) */
+.article-tags-small {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.tag-small {
+    display: inline-block;
+    padding: 2px 8px;
+    background-color: var(--bg-secondary);
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.tag-small:hover {
+    color: var(--accent-color);
+}
+
 /* Empty State */
 .empty-state {
     text-align: center;
@@ -378,6 +435,14 @@ body.night-mode .btn-delete:hover {
             <h2>Your Library</h2>
             <span class="article-count">{{ articles|length }}</span>
         </div>
+        {% if all_tags %}
+        <div class="tag-filter">
+            <a href="/" class="tag-filter-badge {% if not active_tag %}active{% endif %}">All</a>
+            {% for tag in all_tags %}
+            <a href="/?tag={{ tag }}" class="tag-filter-badge {% if active_tag == tag %}active{% endif %}">{{ tag }}</a>
+            {% endfor %}
+        </div>
+        {% endif %}
         <ul class="article-list">
             {% for article in articles %}
             <li class="article-item">
@@ -394,6 +459,15 @@ body.night-mode .btn-delete:hover {
                             {{ article.created_at.strftime('%B %d, %Y') }}
                         </span>
                     </div>
+                    {% if article.tags %}
+                    <div class="article-tags-small">
+                        {% for tag in article.tags.split(',') %}
+                        {% if tag.strip() %}
+                        <a href="/?tag={{ tag.strip() }}" class="tag-small">{{ tag.strip() }}</a>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                 </div>
                 <form action="/delete/{{ article.id }}" method="post" onsubmit="return confirm('Delete this article?');">
                     <button type="submit" class="btn-delete" title="Delete article">
