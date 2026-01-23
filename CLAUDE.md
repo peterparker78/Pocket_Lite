@@ -81,15 +81,15 @@ The `fetch_article_content()` function selects strategy based on URL:
 
 ## Known Limitations
 
-**Cannot bypass** (server-side auth required):
-- thetimes.co.uk, ft.com, wsj.com, economist.com, statnews.com (STAT+ articles)
+**Cannot bypass** (server-side auth or bot detection):
+- thetimes.co.uk, ft.com, wsj.com, economist.com, statnews.com (STAT+ articles), bloomberg.com (bot detection)
 
 **Archive.is limitations**:
 - CAPTCHA blocks automated access (detected and returns error)
 - Only works if article was previously archived
 
 **Sites that work**:
-- substack.com (crawler UA), telegraph.co.uk (Selenium), nytimes.com (crawler UA), nytimes.com/athletic (Googlebot+JS), washingtonpost.com (Google referer), medium.com, paulgraham.com, newscientist.com (crawler UA), wired.com (Facebook crawler)
+- substack.com (crawler UA), telegraph.co.uk (multi-strategy), nytimes.com (crawler UA), nytimes.com/athletic (Googlebot+JS), washingtonpost.com (Google referer), medium.com, paulgraham.com, newscientist.com (crawler UA), wired.com (Facebook crawler), theatlantic.com (Google referer), newyorker.com (Google referer), businessinsider.com (multi-strategy)
 
 ## Customization
 
