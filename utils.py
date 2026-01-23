@@ -46,6 +46,7 @@ HARD_PAYWALL_SITES = [
     "telegraph.co.uk",
     "theathletic.com",
     "nytimes.com/athletic",
+    "wired.com",
 ]
 
 # Sites that may respond to Google referer
@@ -557,9 +558,15 @@ def fetch_article_content(url):
     soup = BeautifulSoup(html_content, "html.parser")
 
     # Remove paywall elements - collect first, then remove
+    # Skip content elements (p, h1-h6, etc.) - some sites like Wired mark content with "paywall" class
+    CONTENT_TAGS = {"p", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "li", "hr"}
     elements_to_remove = []
     for element in soup.find_all(True):
         if element is None:
+            continue
+
+        # Skip content elements - they contain actual article text
+        if element.name in CONTENT_TAGS:
             continue
 
         # Check class attribute
@@ -714,8 +721,14 @@ def clean_article_html(element):
 
     # Remove elements with paywall/ad classes
     elements_to_remove = []
+    # Content elements should not be removed even if they match patterns
+    # (e.g., Wired marks content paragraphs with class="paywall")
+    CONTENT_TAGS = {"p", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "li", "hr"}
     for el in soup.find_all(True):
         if el is None:
+            continue
+        # Skip content elements - they contain the actual article text
+        if el.name in CONTENT_TAGS:
             continue
         classes = el.get("class", [])
         if isinstance(classes, list):

@@ -45,11 +45,11 @@ python test_final.py
 - `POST /update-tags/<id>` - Update article tags (JSON API)
 
 **utils.py** - Core content extraction (all fetch logic lives here)
-- `fetch_article_content(url)` (line 387) - Main entry point, orchestrates strategy selection
-- `fetch_with_selenium_no_js(url)` (line 117) - Selenium fallback with JS disabled
-- `fetch_from_archive_is(url)` (line 257) - Archive.is fallback for hard paywalls
-- `clean_article_html(element)` (line 688) - Strips ads/paywalls, converts to clean HTML
-- `PaywallDetector` class (line 893) - Identifies paywall sites and gateway URLs
+- `fetch_article_content(url)` (line 388) - Main entry point, orchestrates strategy selection
+- `fetch_with_selenium_no_js(url)` (line 122) - Selenium fallback with JS disabled
+- `fetch_from_archive_is(url)` (line 262) - Archive.is fallback for hard paywalls
+- `clean_article_html(element)` (line 695) - Strips ads/paywalls, converts to clean HTML
+- `PaywallDetector` class (line 906) - Identifies paywall sites and gateway URLs
 
 **templates/** - Jinja2 templates with custom CSS (no Bootstrap)
 - `base.html` - CSS variables, Google Fonts (Cormorant Garamond, Source Sans 3)
@@ -71,13 +71,13 @@ The `fetch_article_content()` function selects strategy based on URL:
 
 | Constant | Line | Purpose |
 |----------|------|---------|
-| `HARD_PAYWALL_SITES` | 38 | Sites that use multi-strategy bypass (includes nytimes.com/athletic) |
-| `GOOGLE_REFERER_SITES` | 52 | Sites that respond to Google referer header |
-| `CRAWLER_BYPASS_SITES` | 61 | Sites that show full content to crawler UAs (includes nytimes.com) |
-| `BLOCKED_DOMAINS` | 71 | Ad/analytics domains blocked during fetch |
-| `PAYWALL_ELEMENT_PATTERNS` | 90 | CSS classes/IDs removed before extraction |
-| `ARTICLE_SELECTORS` | 105 | CSS selectors tried in order to find article body |
-| `MIN_CONTENT_LENGTH` | 604 | Minimum characters (500) for valid article content |
+| `HARD_PAYWALL_SITES` | 38 | Sites that use multi-strategy bypass (includes nytimes.com/athletic, wired.com) |
+| `GOOGLE_REFERER_SITES` | 53 | Sites that respond to Google referer header |
+| `CRAWLER_BYPASS_SITES` | 62 | Sites that show full content to crawler UAs (includes nytimes.com) |
+| `BLOCKED_DOMAINS` | 72 | Ad/analytics domains blocked during fetch |
+| `PAYWALL_ELEMENT_PATTERNS` | 91 | CSS classes/IDs removed before extraction |
+| `ARTICLE_SELECTORS` | 106 | CSS selectors tried in order to find article body |
+| `MIN_CONTENT_LENGTH` | 611 | Minimum characters (500) for valid article content |
 
 ## Known Limitations
 
@@ -89,16 +89,17 @@ The `fetch_article_content()` function selects strategy based on URL:
 - Only works if article was previously archived
 
 **Sites that work**:
-- substack.com (crawler UA), telegraph.co.uk (Selenium), nytimes.com (crawler UA), nytimes.com/athletic (Googlebot+JS), washingtonpost.com (Google referer), medium.com, paulgraham.com, newscientist.com (crawler UA)
+- substack.com (crawler UA), telegraph.co.uk (Selenium), nytimes.com (crawler UA), nytimes.com/athletic (Googlebot+JS), washingtonpost.com (Google referer), medium.com, paulgraham.com, newscientist.com (crawler UA), wired.com (Facebook crawler)
 
 ## Customization
 
 Edit constants at the top of `utils.py`:
-- `PAYWALL_SITES` in `PaywallDetector` (line 897) - Add new paywall sites
-- `CRAWLER_BYPASS_SITES` (line 61) - Add sites that show full content to Googlebot
-- `BLOCKED_DOMAINS` (line 71) - Add new ad/tracker domains
-- `PAYWALL_ELEMENT_PATTERNS` (line 90) - Add new paywall element patterns
-- `ARTICLE_SELECTORS` (line 105) - Add new content selectors
+- `PAYWALL_SITES` in `PaywallDetector` (line 910) - Add new paywall sites
+- `HARD_PAYWALL_SITES` (line 38) - Add sites needing multi-strategy bypass
+- `CRAWLER_BYPASS_SITES` (line 62) - Add sites that show full content to Googlebot
+- `BLOCKED_DOMAINS` (line 72) - Add new ad/tracker domains
+- `PAYWALL_ELEMENT_PATTERNS` (line 91) - Add new paywall element patterns
+- `ARTICLE_SELECTORS` (line 106) - Add new content selectors
 
 ## macOS Auto-Start
 
