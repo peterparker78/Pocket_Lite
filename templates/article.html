@@ -56,6 +56,14 @@
     color: white;
 }
 
+.toolbar .btn-favorite.active {
+    color: #F5A623;
+}
+
+.toolbar .btn-favorite.active:hover {
+    background-color: rgba(245, 166, 35, 0.15);
+}
+
 .toolbar .btn-delete-article {
     color: #DC3545;
 }
@@ -70,6 +78,17 @@
     height: 24px;
     background-color: var(--border-color);
     margin: 8px 4px;
+}
+
+/* Reading Progress Bar */
+.reading-progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent-color), var(--accent-hover));
+    z-index: 10000;
+    transition: width 0.1s ease;
 }
 
 /* Back Navigation */
@@ -110,6 +129,23 @@
     transform: translateX(-3px);
 }
 
+/* Main Layout with Sidebar */
+.article-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 48px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+@media (max-width: 1024px) {
+    .article-layout {
+        grid-template-columns: 1fr;
+        gap: 32px;
+    }
+}
+
 /* Article Header */
 .article-header {
     padding: 24px 0 48px;
@@ -127,6 +163,21 @@
     letter-spacing: -0.02em;
     color: var(--text-color);
     margin: 0;
+}
+
+.article-meta-header {
+    display: flex;
+    gap: 16px;
+    margin-top: 16px;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    flex-wrap: wrap;
+}
+
+.article-meta-header span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 /* Article Content */
@@ -312,6 +363,328 @@
     color: white;
 }
 
+/* Sidebar */
+.article-sidebar {
+    position: sticky;
+    top: 100px;
+    height: fit-content;
+    opacity: 0;
+    animation: fadeIn 0.6s ease 0.4s forwards;
+}
+
+@media (max-width: 1024px) {
+    .article-sidebar {
+        position: relative;
+        top: 0;
+        order: -1;
+    }
+}
+
+/* Summary Box */
+.summary-box {
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-color) 100%);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.summary-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.summary-icon {
+    width: 24px;
+    height: 24px;
+    color: var(--accent-color);
+}
+
+.summary-title {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0;
+}
+
+.summary-content {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.summary-content p {
+    margin-bottom: 0;
+}
+
+/* Notes Section */
+.notes-section {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+.notes-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.notes-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--accent-color);
+}
+
+.notes-title {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0;
+}
+
+.notes-textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 12px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.9rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    resize: vertical;
+    transition: border-color 0.2s ease;
+}
+
+.notes-textarea:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+.notes-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.btn-save-notes {
+    padding: 8px 16px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 6px;
+    background-color: var(--accent-color);
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-save-notes:hover {
+    background-color: var(--accent-hover);
+}
+
+.btn-save-notes.saved {
+    background-color: #28A745;
+}
+
+/* Images Section */
+.images-section {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+.images-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.images-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--accent-color);
+}
+
+.images-title {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0;
+}
+
+.images-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+.image-item {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.image-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--shadow-color);
+}
+
+.image-item img {
+    width: 100%;
+    height: auto;
+    display: block;
+    cursor: pointer;
+}
+
+.image-caption {
+    padding: 10px 12px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+    border-top: 1px solid var(--border-color);
+}
+
+.image-caption:empty {
+    display: none;
+}
+
+.no-images {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-style: italic;
+    text-align: center;
+    padding: 20px 0;
+}
+
+/* Export Section */
+.export-section {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.export-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.export-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--accent-color);
+}
+
+.export-title {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0;
+}
+
+.export-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.export-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--bg-color);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.export-btn:hover {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+}
+
+.export-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Image Lightbox */
+.lightbox {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.92);
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+}
+
+.lightbox.active {
+    display: flex;
+}
+
+.lightbox img {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+.lightbox-close {
+    position: absolute;
+    top: 20px;
+    right: 40px;
+    font-size: 2.5rem;
+    color: white;
+    cursor: pointer;
+    background: none;
+    border: none;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.lightbox-close:hover {
+    opacity: 1;
+}
+
 /* Article Footer */
 .article-footer {
     margin-top: 64px;
@@ -362,11 +735,15 @@
         text-align: left;
         hyphens: none;
     }
+
+    .article-meta-header {
+        font-size: 0.8rem;
+    }
 }
 
 /* Print styles */
 @media print {
-    .toolbar, .back-nav {
+    .toolbar, .back-nav, .article-sidebar, .reading-progress-bar {
         display: none !important;
     }
 
@@ -379,10 +756,10 @@
         display: none;
     }
 
-    .container-reading {
+    .article-layout {
         max-width: 100%;
         padding: 0;
-        margin: 0;
+        display: block;
     }
 
     .article-header {
@@ -420,6 +797,9 @@
 {% endblock %}
 
 {% block content %}
+<!-- Reading Progress Bar -->
+<div class="reading-progress-bar" id="progressBar" style="width: {{ reading_progress or 0 }}%"></div>
+
 <!-- Reading Controls Toolbar -->
 <div class="toolbar">
     <button onclick="decreaseFont()" title="Decrease font size">A−</button>
@@ -430,6 +810,13 @@
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
         </svg>
     </button>
+    {% if article_id %}
+    <button onclick="toggleFavorite()" id="favoriteBtn" class="btn-favorite {% if is_favorite %}active{% endif %}" title="Toggle favorite">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="{% if is_favorite %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+        </svg>
+    </button>
+    {% endif %}
     <button onclick="printArticle()" title="Print or Save as PDF">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="6 9 6 2 18 2 18 9"></polyline>
@@ -457,9 +844,9 @@
     {% endif %}
 </div>
 
-<div class="container-reading">
-    <!-- Back Navigation -->
-    <nav class="back-nav">
+<!-- Back Navigation -->
+<nav class="back-nav">
+    <div class="container-reading" style="max-width: 1200px;">
         <a href="/" class="back-link">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="19" y1="12" x2="5" y2="12"></line>
@@ -467,35 +854,174 @@
             </svg>
             Back to Library
         </a>
-    </nav>
+    </div>
+</nav>
 
-    <!-- Article Header -->
-    {% if title %}
-    <header class="article-header">
-        <h1 class="article-title">{{ title }}</h1>
+<div class="article-layout">
+    <!-- Main Article Content -->
+    <main class="article-main">
+        <!-- Article Header -->
+        {% if title %}
+        <header class="article-header">
+            <h1 class="article-title">{{ title }}</h1>
+            <div class="article-meta-header">
+                {% if reading_time %}
+                <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    {{ reading_time }} min read
+                </span>
+                {% endif %}
+                {% if word_count %}
+                <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                    {{ word_count }} words
+                </span>
+                {% endif %}
+                {% if reading_progress and reading_progress > 0 %}
+                <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 20v-6M6 20V10M18 20V4"></path>
+                    </svg>
+                    {{ reading_progress }}% read
+                </span>
+                {% endif %}
+            </div>
+            {% if article_id %}
+            <div class="article-tags" id="tagsContainer">
+                {% for tag in tags %}
+                <span class="tag-badge" onclick="removeTag('{{ tag }}')">{{ tag }}<span class="remove-tag">×</span></span>
+                {% endfor %}
+                <div class="tag-input-wrapper">
+                    <input type="text" class="tag-input" id="tagInput" placeholder="Add tag..." onkeypress="handleTagKeypress(event)">
+                    <button class="btn-add-tag" onclick="addTag()">Add</button>
+                </div>
+            </div>
+            {% endif %}
+        </header>
+        {% endif %}
+
+        <!-- Article Content -->
+        <article class="article-content" id="articleContent">
+            {{ content|safe }}
+        </article>
+
+        <!-- Article Footer -->
+        <footer class="article-footer">
+            <div class="end-mark">&#10045;</div>
+        </footer>
+    </main>
+
+    <!-- Sidebar with Summary, Notes, Images, Export -->
+    <aside class="article-sidebar">
+        <!-- Summary Box -->
+        {% if summary %}
+        <div class="summary-box">
+            <div class="summary-header">
+                <svg class="summary-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                <h3 class="summary-title">Summary</h3>
+            </div>
+            <p class="summary-content">{{ summary }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Notes Section -->
         {% if article_id %}
-        <div class="article-tags" id="tagsContainer">
-            {% for tag in tags %}
-            <span class="tag-badge" onclick="removeTag('{{ tag }}')">{{ tag }}<span class="remove-tag">×</span></span>
-            {% endfor %}
-            <div class="tag-input-wrapper">
-                <input type="text" class="tag-input" id="tagInput" placeholder="Add tag..." onkeypress="handleTagKeypress(event)">
-                <button class="btn-add-tag" onclick="addTag()">Add</button>
+        <div class="notes-section">
+            <div class="notes-header">
+                <svg class="notes-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                <h3 class="notes-title">Your Notes</h3>
+            </div>
+            <textarea class="notes-textarea" id="notesTextarea" placeholder="Add your thoughts, highlights, or reminders here...">{{ notes or '' }}</textarea>
+            <div class="notes-actions">
+                <button class="btn-save-notes" id="saveNotesBtn" onclick="saveNotes()">Save Notes</button>
             </div>
         </div>
         {% endif %}
-    </header>
-    {% endif %}
 
-    <!-- Article Content -->
-    <article class="article-content" id="articleContent">
-        {{ content|safe }}
-    </article>
+        <!-- Images Section -->
+        <div class="images-section">
+            <div class="images-header">
+                <svg class="images-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                <h3 class="images-title">Images ({{ images|length }})</h3>
+            </div>
+            {% if images %}
+            <div class="images-grid">
+                {% for img in images %}
+                <div class="image-item" onclick="openLightbox('{{ img.url }}')">
+                    <img src="{{ img.url }}" alt="{{ img.alt }}" loading="lazy">
+                    {% if img.caption %}
+                    <div class="image-caption">{{ img.caption }}</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="no-images">No images found in this article.</p>
+            {% endif %}
+        </div>
 
-    <!-- Article Footer -->
-    <footer class="article-footer">
-        <div class="end-mark">&#10045;</div>
-    </footer>
+        <!-- Export Section -->
+        {% if article_id %}
+        <div class="export-section">
+            <div class="export-header">
+                <svg class="export-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <h3 class="export-title">Export</h3>
+            </div>
+            <div class="export-buttons">
+                <a href="/export/{{ article_id }}?format=md" class="export-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                    Markdown (.md)
+                </a>
+                <a href="/export/{{ article_id }}?format=txt" class="export-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                    Plain Text (.txt)
+                </a>
+                <a href="/export/{{ article_id }}?format=epub" class="export-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                    </svg>
+                    EPUB (.epub)
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </aside>
+</div>
+
+<!-- Lightbox for Image Viewing -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <button class="lightbox-close">&times;</button>
+    <img src="" alt="Full size image" id="lightboxImg">
 </div>
 {% endblock %}
 
@@ -559,6 +1085,23 @@
         }
     });
 
+    // Favorite toggle
+    function toggleFavorite() {
+        fetch('/toggle-favorite/{{ article_id }}', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            const btn = document.getElementById('favoriteBtn');
+            const svg = btn.querySelector('svg');
+            if (data.is_favorite) {
+                btn.classList.add('active');
+                svg.setAttribute('fill', 'currentColor');
+            } else {
+                btn.classList.remove('active');
+                svg.setAttribute('fill', 'none');
+            }
+        });
+    }
+
     // Delete article
     function deleteArticle() {
         if (confirm('Delete this article?')) {
@@ -574,6 +1117,119 @@
     function printArticle() {
         window.print();
     }
+
+    // Lightbox functions
+    function openLightbox(imgSrc) {
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightboxImg');
+        lightboxImg.src = imgSrc;
+        lightbox.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+        const lightbox = document.getElementById('lightbox');
+        lightbox.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    // Reading progress tracking
+    let readingProgressSaved = {{ reading_progress or 0 }};
+    let lastSavedProgress = readingProgressSaved;
+
+    function updateReadingProgress() {
+        const article = document.querySelector('.article-content');
+        if (!article) return;
+
+        const scrollTop = window.scrollY;
+        const articleTop = article.offsetTop;
+        const articleHeight = article.offsetHeight;
+        const windowHeight = window.innerHeight;
+
+        // Calculate progress as percentage of article read
+        let progress = 0;
+        if (scrollTop > articleTop) {
+            const scrollProgress = scrollTop - articleTop;
+            const readableHeight = articleHeight - windowHeight;
+            progress = Math.round((scrollProgress / readableHeight) * 100);
+        }
+
+        progress = Math.min(100, Math.max(0, progress));
+
+        // Update progress bar
+        document.getElementById('progressBar').style.width = progress + '%';
+
+        // Save progress periodically (every 10% change or at least 30 seconds)
+        const now = Date.now();
+        const shouldSave = progress > lastSavedProgress + 10 || (now - lastSaveTime > 30000 && progress !== lastSavedProgress);
+        
+        if (shouldSave && {{ article_id }}) {
+            saveProgress(progress);
+            lastSavedProgress = progress;
+            lastSaveTime = now;
+        }
+    }
+
+    let lastSaveTime = Date.now();
+
+    function saveProgress(progress) {
+        fetch('/update-progress/{{ article_id }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ progress: progress })
+        });
+    }
+
+    // Throttled scroll handler
+    let ticking = false;
+    window.addEventListener('scroll', function() {
+        if (!ticking) {
+            window.requestAnimationFrame(function() {
+                updateReadingProgress();
+                ticking = false;
+            });
+            ticking = true;
+        }
+    });
+
+    // Save progress on page unload
+    window.addEventListener('beforeunload', function() {
+        const progress = parseInt(document.getElementById('progressBar').style.width) || 0;
+        if (progress > lastSavedProgress) {
+            navigator.sendBeacon('/update-progress/{{ article_id }}', 
+                JSON.stringify({ progress: progress }));
+        }
+    });
+
+    // Notes functionality
+    function saveNotes() {
+        const notes = document.getElementById('notesTextarea').value;
+        const btn = document.getElementById('saveNotesBtn');
+        
+        fetch('/update-notes/{{ article_id }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ notes: notes })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                btn.textContent = 'Saved!';
+                btn.classList.add('saved');
+                setTimeout(() => {
+                    btn.textContent = 'Save Notes';
+                    btn.classList.remove('saved');
+                }, 2000);
+            }
+        });
+    }
+
+    // Auto-save notes after 2 seconds of inactivity
+    let notesTimeout;
+    document.getElementById('notesTextarea')?.addEventListener('input', function() {
+        clearTimeout(notesTimeout);
+        notesTimeout = setTimeout(saveNotes, 2000);
+    });
 
     // Tag management
     let currentTags = {{ tags|tojson if tags else '[]' }};
@@ -629,5 +1285,55 @@
             addTag();
         }
     }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Close lightbox with Escape
+        if (e.key === 'Escape') {
+            closeLightbox();
+        }
+
+        // Increase font size with '=' or '+'
+        if (e.key === '=' || e.key === '+') {
+            e.preventDefault();
+            increaseFont();
+        }
+
+        // Decrease font size with '-'
+        if (e.key === '-' && !e.ctrlKey && !e.metaKey) {
+            e.preventDefault();
+            decreaseFont();
+        }
+
+        // Toggle night mode with 'm'
+        if (e.key === 'm' && document.activeElement.tagName !== 'TEXTAREA') {
+            e.preventDefault();
+            toggleNightMode();
+        }
+
+        // Print with 'p'
+        if (e.key === 'p' && document.activeElement.tagName !== 'TEXTAREA') {
+            e.preventDefault();
+            printArticle();
+        }
+
+        // Delete with 'd'
+        if (e.key === 'd' && document.activeElement.tagName !== 'TEXTAREA') {
+            e.preventDefault();
+            deleteArticle();
+        }
+
+        // Export with 'e'
+        if (e.key === 'e' && document.activeElement.tagName !== 'TEXTAREA') {
+            e.preventDefault();
+            window.location.href = '/export/{{ article_id }}?format=md';
+        }
+
+        // Back to library with 'b'
+        if (e.key === 'b' && document.activeElement.tagName !== 'TEXTAREA') {
+            e.preventDefault();
+            window.location.href = '/';
+        }
+    });
 </script>
 {% endblock %}

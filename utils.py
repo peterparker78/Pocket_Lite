@@ -34,6 +34,45 @@ FACEBOOK_USER_AGENT = (
 # Twitter crawler User-Agent
 TWITTER_USER_AGENT = "Twitterbot/1.0"
 
+# Extended User-Agent list for rotation
+USER_AGENTS = [
+    # Chrome on Mac
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+    # Chrome on Windows
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+    # Firefox
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:121.0) Gecko/20100101 Firefox/121.0",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
+    # Safari
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15",
+    # Edge
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0",
+    # Googlebot variants
+    "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Chrome/120.0.0.0 Safari/537.36",
+    # Bingbot
+    "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm) Chrome/120.0.0.0 Safari/537.36",
+    # DuckDuckGo
+    "DuckDuckBot/1.1; (+http://duckduckgo.com/duckduckbot.html)",
+]
+
+
+def get_random_user_agent():
+    """Get a random user agent for rotation."""
+    return random.choice(USER_AGENTS)
+
+
+def estimate_reading_time(word_count):
+    """
+    Estimate reading time in minutes based on word count.
+    Average reading speed: 200-250 words per minute
+    """
+    if not word_count or word_count <= 0:
+        return 1
+    minutes = word_count / 200
+    return max(1, round(minutes))
+
 # Sites with hard paywalls - try multiple bypass strategies
 HARD_PAYWALL_SITES = [
     "ft.com",
@@ -47,6 +86,140 @@ HARD_PAYWALL_SITES = [
     "theathletic.com",
     "nytimes.com/athletic",
     "wired.com",
+    # Additional financial/business news
+    "marketwatch.com",
+    "seekingalpha.com",
+    "thestreet.com",
+    "investors.com",
+    "morningstar.com",
+    "kiplinger.com",
+    "financialpost.com",
+    "marketscreener.com",
+    "reuters.com",  # Some premium content
+    "cnbc.com",  # Some premium content
+    # Technology/Science paywalls
+    "technologyreview.com",  # MIT Technology Review
+    "scientificamerican.com",
+    "nature.com",
+    "science.org",
+    "newscientist.com",
+    "ieee.org",
+    "acm.org",
+    "spectrum.ieee.org",
+    # News/Investigative
+    "foreignpolicy.com",
+    "theinformation.com",
+    "axios.com",
+    "politico.com",  # Some premium content
+    "statnews.com",  # STAT+ articles
+    "law360.com",
+    "propublica.org",  # Sometimes
+    "revealnews.org",
+    # Regional newspapers
+    "latimes.com",
+    "chicagotribune.com",
+    "bostonglobe.com",
+    "seattletimes.com",
+    "mercurynews.com",
+    "denverpost.com",
+    "dallasnews.com",
+    "houstonchronicle.com",
+    "philly.com",
+    "miamiherald.com",
+    "startribune.com",
+    "plaindealer.com",
+    "oregonlive.com",
+    "sacbee.com",
+    "sandiegouniontribune.com",
+    "baltimoresun.com",
+    "pilotonline.com",
+    "reviewjournal.com",
+    "ajc.com",  # Atlanta Journal-Constitution
+    "detroitnews.com",
+    "freep.com",  # Detroit Free Press
+    "tampabay.com",
+    "orlandosentinel.com",
+    "sun-sentinel.com",
+    "indyStar.com",
+    "courier-journal.com",
+    "jsonline.com",  # Milwaukee Journal Sentinel
+    "kansascity.com",
+    "stltoday.com",
+    "tulsaworld.com",
+    "oklahoman.com",
+    "statesman.com",  # Austin American-Statesman
+    "dallasnews.com",
+    # UK/European news
+    "theguardian.com",  # Some premium
+    "independent.co.uk",
+    "eveningstandard.co.uk",
+    "scotsman.com",
+    "heraldscotland.com",
+    "irishtimes.com",
+    "france24.com",  # Some premium
+    "spiegel.de",  # Some premium
+    "zeit.de",  # German
+    "faz.net",  # Frankfurter Allgemeine
+    "lemonde.fr",  # Some premium
+    "figaro.fr",
+    "corriere.it",
+    "repubblica.it",
+    "elmundo.es",
+    "elpais.com",
+    # Asian/Australian news
+    "afr.com",  # Australian Financial Review
+    "theaustralian.com.au",
+    "smh.com.au",  # Sydney Morning Herald
+    "theage.com.au",
+    "couriermail.com.au",
+    "dailytelegraph.com.au",
+    "heraldsun.com.au",
+    "scmp.com",  # South China Morning Post
+    "japantimes.co.jp",
+    "asahi.com",
+    "mainichi.jp",
+    "straitstimes.com",
+    # Magazines
+    "newyorker.com",  # Some articles
+    "vanityfair.com",
+    "gq.com",
+    "esquire.com",
+    "theatlantic.com",  # Some premium
+    "time.com",  # Some premium
+    "fortune.com",
+    "fastcompany.com",
+    "inc.com",
+    "entrepreneur.com",
+    "forbes.com",  # Some premium
+    "hbr.org",
+    # Academic/Educational
+    "chronicle.com",  # Chronicle of Higher Education
+    "insidehighered.com",
+    "edweek.org",
+    "timeshighereducation.com",
+    "theconversation.com",  # Some university access
+    "jstor.org",
+    "ssrn.com",  # Some papers
+    "researchgate.net",  # Some papers
+    "academia.edu",
+    # Sports
+    "espn.com",  # ESPN+ content
+    "espnplus.com",
+    "cbssports.com",  # Some premium
+    "nbcsports.com",
+    "thesportsanalyst.com",
+    "athlonsports.com",
+    # Entertainment/Lifestyle
+    "variety.com",
+    "hollywoodreporter.com",
+    "deadline.com",
+    "billboard.com",
+    "rollingstone.com",
+    "pitchfork.com",
+    "vulture.com",
+    "eater.com",
+    "thrillist.com",
+    "apartmenttherapy.com",
 ]
 
 # Sites that may respond to Google referer
@@ -56,6 +229,23 @@ GOOGLE_REFERER_SITES = [
     "theatlantic.com",
     "wired.com",
     "newyorker.com",
+    "theguardian.com",
+    "latimes.com",
+    "chicagotribune.com",
+    "bostonglobe.com",
+    "technologyreview.com",
+    "foreignpolicy.com",
+    "forbes.com",
+    "hbr.org",
+    "scientificamerican.com",
+    "nationalgeographic.com",
+    "theverge.com",
+    "vox.com",
+    "polygon.com",
+    "sbnation.com",
+    "eater.com",
+    "racked.com",
+    "curbed.com",
 ]
 
 # Sites that show full content to crawler user agents (for SEO/social sharing)
@@ -63,6 +253,33 @@ CRAWLER_BYPASS_SITES = [
     "substack.com",
     "newscientist.com",
     "nytimes.com",
+    "medium.com",
+    "ghost.org",
+    "hashnode.com",
+    "dev.to",
+    "betterprogramming.pub",
+    "towardsdatascience.com",
+    "javascript.plainenglish.io",
+    "blogspot.com",
+    "wordpress.com",
+    "techcrunch.com",
+    "theverge.com",
+    "arstechnica.com",
+    "engadget.com",
+    "gizmodo.com",
+    "lifehacker.com",
+    "kotaku.com",
+    "jezebel.com",
+    "avclub.com",
+    "deadspin.com",
+    "theringer.com",
+    "defector.com",
+    "aftermath.site",
+    "platformer.news",
+    "lennyrachitsky.com",
+    "stratechery.com",
+    "benthompson.com",
+    "paulgraham.com",
 ]
 
 # Archive.is base URL for cached content
@@ -385,6 +602,166 @@ def fetch_from_archive_is(url):
     }
 
 
+def fetch_from_12ft_io(url):
+    """
+    Fetch article content from 12ft.io as a fallback for paywalls.
+    
+    12ft.io is a popular service that bypasses paywalls by stripping
+    them from news articles.
+    
+    Args:
+        url: The original article URL
+        
+    Returns:
+        Dict with 'title', 'text', 'original_url', or None if failed
+    """
+    import urllib.parse
+    
+    encoded_url = urllib.parse.quote(url, safe="")
+    proxy_url = f"https://12ft.io/{encoded_url}"
+    
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        context = browser.new_context(
+            user_agent=get_random_user_agent(),
+            viewport={"width": 1920, "height": 1080},
+        )
+        page = context.new_page()
+        
+        try:
+            page.goto(proxy_url, wait_until="networkidle", timeout=30000)
+            time.sleep(3)
+            
+            html_content = page.content()
+            browser.close()
+            
+            if not html_content or len(html_content) < 2000:
+                return None
+                
+        except Exception as e:
+            browser.close()
+            return None
+    
+    # Parse content
+    soup = BeautifulSoup(html_content, "html.parser")
+    
+    # 12ft.io usually puts content in a clean wrapper
+    content_div = soup.find("div", class_=lambda x: x and "article" in str(x).lower())
+    if not content_div:
+        content_div = soup.find("article")
+    if not content_div:
+        content_div = soup.find("main")
+    if not content_div:
+        content_div = soup.find("body")
+    
+    if not content_div:
+        return None
+    
+    # Extract title
+    title = None
+    title_tag = soup.find("title")
+    if title_tag:
+        title = title_tag.get_text(strip=True)
+    
+    h1_tag = soup.find("h1")
+    if h1_tag:
+        h1_text = h1_tag.get_text(strip=True)
+        if h1_text and (not title or len(h1_text) > 10):
+            title = h1_text
+    
+    # Clean content
+    cleaned_html = clean_article_html(content_div)
+    
+    if not cleaned_html or len(cleaned_html.strip()) < 200:
+        return None
+    
+    return {
+        "title": title,
+        "text": cleaned_html,
+        "original_url": url,
+        "source": "12ft.io",
+    }
+
+
+def fetch_from_textise_dot_iitty(url):
+    """
+    Fetch article content from textise dot iitty service.
+    
+    textise dot iitty converts articles to plain text, removing
+    paywalls and formatting.
+    
+    Args:
+        url: The original article URL
+        
+    Returns:
+        Dict with 'title', 'text', 'original_url', or None if failed
+    """
+    import urllib.parse
+    
+    # textise dot iitty proxy service
+    encoded_url = urllib.parse.quote(url, safe="")
+    proxy_url = f"https://r.jina.ai/http://{url}"
+    
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        context = browser.new_context(
+            user_agent=get_random_user_agent(),
+            viewport={"width": 1920, "height": 1080},
+        )
+        page = context.new_page()
+        
+        try:
+            page.goto(proxy_url, wait_until="networkidle", timeout=30000)
+            time.sleep(2)
+            
+            html_content = page.content()
+            browser.close()
+            
+            if not html_content or len(html_content) < 1000:
+                return None
+                
+        except Exception as e:
+            browser.close()
+            return None
+    
+    # Jina AI returns plain text content
+    soup = BeautifulSoup(html_content, "html.parser")
+    
+    # Extract content - usually in body
+    body = soup.find("body")
+    if not body:
+        return None
+    
+    text_content = body.get_text(separator="\n\n", strip=True)
+    
+    # Try to extract title from first line
+    lines = [l.strip() for l in text_content.split("\n") if l.strip()]
+    title = None
+    if lines:
+        title = lines[0]
+        if len(title) > 100:
+            title = title[:100] + "..."
+    
+    # Convert text to HTML paragraphs
+    paragraphs = text_content.split("\n\n")
+    html_paragraphs = []
+    for para in paragraphs[1:] if title else paragraphs:  # Skip title if extracted
+        if len(para.strip()) > 20:
+            html_paragraphs.append(f"<p>{escape_html(para.strip())}</p>")
+    
+    cleaned_html = "\n".join(html_paragraphs)
+    
+    if not cleaned_html or len(cleaned_html.strip()) < 200:
+        return None
+    
+    return {
+        "title": title,
+        "text": cleaned_html,
+        "original_url": url,
+        "source": "jina.ai",
+    }
+
+
 def fetch_article_content(url):
     """
     Fetch article content using Playwright with anti-bot measures.
@@ -546,12 +923,23 @@ def fetch_article_content(url):
             if "access denied" not in selenium_lower and "403 forbidden" not in selenium_lower:
                 html_content = selenium_html
 
-    # If still no content, try archive.is as last resort
+    # If still no content, try alternative bypass services
     if not html_content:
         if is_hard_paywall:
+            # Try archive.is
             archive_result = fetch_from_archive_is(url)
             if archive_result:
                 return archive_result
+            
+            # Try 12ft.io
+            result_12ft = fetch_from_12ft_io(url)
+            if result_12ft:
+                return result_12ft
+            
+            # Try Jina AI summarizer as last resort
+            result_jina = fetch_from_textise_dot_iitty(url)
+            if result_jina:
+                return result_jina
         return None
 
     # Parse with BeautifulSoup
@@ -682,13 +1070,25 @@ def fetch_article_content(url):
         if is_hard_paywall:
             archive_result = fetch_from_archive_is(url)
             if archive_result:
+                # Also extract images and summary from archive result
+                archive_soup = BeautifulSoup(archive_result["text"], "html.parser")
+                archive_result["images"] = extract_article_images(archive_soup, url)
+                archive_result["summary"] = generate_article_summary(archive_result["text"])
                 return archive_result
         return None
+
+    # Extract images from the article
+    article_images = extract_article_images(soup, url)
+    
+    # Generate summary
+    article_summary = generate_article_summary(cleaned_html)
 
     return {
         "title": title,
         "text": cleaned_html,
         "original_url": url,
+        "images": article_images,
+        "summary": article_summary,
     }
 
 
@@ -903,6 +1303,396 @@ def escape_html(text):
     )
 
 
+# Ad/tracking image patterns to filter out
+AD_IMAGE_PATTERNS = [
+    "adsystem",
+    "adservice",
+    "googlesyndication",
+    "doubleclick",
+    "googletag",
+    "facebook.com/tr",
+    "analytics",
+    "tracking",
+    "beacon",
+    "pixel",
+    "ads",
+    "advertisement",
+    "sponsored",
+    "affiliate",
+    "banner",
+    "popup",
+    "newsletter-signup",
+    "social-share",
+    "icon-",
+    "logo-",
+    "avatar",
+    "profile-pic",
+    "author-image",
+    "emoji",
+    "icon_",
+    "_icon",
+    "button",
+    "cta-",
+    "subscribe",
+    "download-app",
+]
+
+# Good image indicators (likely article content)
+GOOD_IMAGE_PATTERNS = [
+    "article",
+    "feature",
+    "hero",
+    "lead",
+    "main",
+    "content",
+    "story",
+    "photo",
+    "image",
+    "gallery",
+    "caption",
+    "illustration",
+    "diagram",
+    "chart",
+    "infographic",
+]
+
+# Minimum image dimensions to consider (avoid tiny icons)
+MIN_IMAGE_WIDTH = 150
+MIN_IMAGE_HEIGHT = 100
+
+
+def is_likely_ad_image(img_tag, img_url="", img_classes="", img_alt=""):
+    """
+    Determine if an image is likely an ad or non-content image.
+    
+    Args:
+        img_tag: BeautifulSoup img tag
+        img_url: Image URL
+        img_classes: Image CSS classes
+        img_alt: Image alt text
+    
+    Returns:
+        True if likely an ad/unwanted image, False if likely content
+    """
+    url_lower = img_url.lower()
+    classes_lower = img_classes.lower()
+    alt_lower = img_alt.lower()
+    
+    # Check for ad patterns in URL
+    for pattern in AD_IMAGE_PATTERNS:
+        if pattern in url_lower:
+            return True
+        if pattern in classes_lower:
+            return True
+        if pattern in alt_lower and len(alt_lower) < 50:
+            return True
+    
+    # Check parent element for ad indicators
+    parent = img_tag.find_parent() if img_tag else None
+    if parent:
+        parent_classes = parent.get("class", [])
+        if isinstance(parent_classes, list):
+            parent_classes = " ".join(parent_classes)
+        parent_classes = parent_classes.lower()
+        for pattern in ["ad", "advertisement", "sponsored", "promo", "newsletter"]:
+            if pattern in parent_classes:
+                return True
+    
+    # Check dimensions if available (tiny images are likely icons)
+    width = img_tag.get("width", "") if img_tag else ""
+    height = img_tag.get("height", "") if img_tag else ""
+    
+    # Try to extract numeric dimensions
+    try:
+        w = int("".join(filter(str.isdigit, str(width)))) if width else 0
+        h = int("".join(filter(str.isdigit, str(height)))) if height else 0
+        if 0 < w < 100 or 0 < h < 80:
+            return True  # Likely an icon
+    except (ValueError, TypeError):
+        pass
+    
+    return False
+
+
+def is_likely_content_image(img_tag, img_url="", img_classes="", img_alt=""):
+    """
+    Determine if an image is likely article content (photo, illustration, etc.).
+    
+    Args:
+        img_tag: BeautifulSoup img tag
+        img_url: Image URL
+        img_classes: Image CSS classes
+        img_alt: Image alt text
+    
+    Returns:
+        True if likely content image, False otherwise
+    """
+    url_lower = img_url.lower()
+    classes_lower = img_classes.lower()
+    alt_lower = img_alt.lower()
+    
+    # Check for good content patterns
+    for pattern in GOOD_IMAGE_PATTERNS:
+        if pattern in url_lower or pattern in classes_lower:
+            return True
+    
+    # Descriptive alt text suggests content image
+    if len(img_alt) > 20 and not any(p in alt_lower for p in ["advertisement", "sponsored", "click here"]):
+        return True
+    
+    # Large images are likely content
+    width = img_tag.get("width", "") if img_tag else ""
+    height = img_tag.get("height", "") if img_tag else ""
+    
+    try:
+        w = int("".join(filter(str.isdigit, str(width)))) if width else 0
+        h = int("".join(filter(str.isdigit, str(height)))) if height else 0
+        if w >= 400 or h >= 300:
+            return True
+    except (ValueError, TypeError):
+        pass
+    
+    # Check if inside article content area
+    parent = img_tag.find_parent() if img_tag else None
+    if parent:
+        article_parents = ["article", "main", "[role='main']", ".post-content", ".article-content", ".entry-content"]
+        for selector in article_parents:
+            # Simple check - in real implementation would use proper CSS selector
+            parent_tag = parent.name.lower() if parent.name else ""
+            if parent_tag in ["article", "main"]:
+                return True
+    
+    return False
+
+
+def extract_article_images(soup, base_url=""):
+    """
+    Extract content images from article HTML, filtering out ads and icons.
+    
+    Args:
+        soup: BeautifulSoup object of the article
+        base_url: Base URL for resolving relative image URLs
+    
+    Returns:
+        List of dicts with image info: {'url': ..., 'alt': ..., 'caption': ...}
+    """
+    images = []
+    seen_urls = set()
+    
+    # Find all image tags
+    img_tags = soup.find_all(["img", "picture"])
+    
+    for img in img_tags:
+        # Get image source
+        img_url = (img.get("src") or 
+                   img.get("data-src") or 
+                   img.get("data-original") or
+                   img.get("data-lazy-src") or
+                   "")
+        
+        # Check for source tag in picture elements
+        if img.name == "picture":
+            sources = img.find_all("source")
+            for source in sources:
+                srcset = source.get("srcset", "")
+                if srcset:
+                    # Take first srcset URL
+                    img_url = srcset.split(",")[0].split()[0]
+                    break
+            if not img_url:
+                img_in_picture = img.find("img")
+                if img_in_picture:
+                    img_url = (img_in_picture.get("src") or 
+                               img_in_picture.get("data-src") or "")
+        
+        if not img_url:
+            continue
+        
+        # Skip data URIs (usually tiny icons)
+        if img_url.startswith("data:"):
+            continue
+        
+        # Resolve relative URLs
+        if img_url.startswith("//"):
+            img_url = "https:" + img_url
+        elif img_url.startswith("/"):
+            from urllib.parse import urljoin
+            img_url = urljoin(base_url, img_url)
+        
+        # Skip duplicates
+        if img_url in seen_urls:
+            continue
+        seen_urls.add(img_url)
+        
+        # Get image metadata
+        img_classes = img.get("class", [])
+        if isinstance(img_classes, list):
+            img_classes = " ".join(img_classes)
+        
+        img_alt = img.get("alt", "") or ""
+        
+        # Filter out ad images
+        if is_likely_ad_image(img, img_url, img_classes, img_alt):
+            continue
+        
+        # Look for caption
+        caption = ""
+        # Check for figcaption
+        parent_figure = img.find_parent("figure")
+        if parent_figure:
+            figcaption = parent_figure.find("figcaption")
+            if figcaption:
+                caption = figcaption.get_text(strip=True)
+        
+        # Check for common caption classes
+        if not caption:
+            parent = img.find_parent()
+            if parent:
+                caption_el = (parent.find(class_=lambda x: x and "caption" in str(x).lower()) or
+                             parent.find(class_=lambda x: x and "credit" in str(x).lower()))
+                if caption_el:
+                    caption = caption_el.get_text(strip=True)
+        
+        images.append({
+            "url": img_url,
+            "alt": img_alt,
+            "caption": caption,
+        })
+    
+    # Sort to prioritize likely content images first
+    def image_priority(img_info):
+        score = 0
+        if img_info["caption"]:
+            score += 10
+        if len(img_info["alt"]) > 20:
+            score += 5
+        if any(p in img_info["url"].lower() for p in GOOD_IMAGE_PATTERNS):
+            score += 3
+        return -score  # Negative for descending sort
+    
+    images.sort(key=image_priority)
+    
+    # Limit to reasonable number (avoid galleries overwhelming)
+    return images[:8]
+
+
+def generate_article_summary(html_content, max_sentences=5):
+    """
+    Generate a summary of article content by extracting key sentences.
+    
+    Uses a simple algorithm:
+    - Extract first paragraph (usually the lede)
+    - Look for sentences containing important keywords
+    - Prioritize sentences early in the article
+    
+    Args:
+        html_content: HTML content of the article
+        max_sentences: Maximum number of sentences in summary
+    
+    Returns:
+        Summary text string
+    """
+    from bs4 import BeautifulSoup
+    import re
+    
+    soup = BeautifulSoup(html_content, "html.parser")
+    
+    # Get all paragraph text
+    paragraphs = soup.find_all(["p", "h2", "h3", "h4"])
+    
+    if not paragraphs:
+        return ""
+    
+    # Collect all sentences with their position
+    sentences_with_pos = []
+    position = 0
+    
+    for p in paragraphs:
+        text = p.get_text(strip=True)
+        if not text:
+            continue
+        
+        # Split into sentences (simple approach)
+        sentences = re.split(r'(?<=[.!?])\s+', text)
+        
+        for sent in sentences:
+            sent = sent.strip()
+            if len(sent) > 40 and len(sent) < 300:  # Reasonable sentence length
+                sentences_with_pos.append((position, sent))
+                position += 1
+    
+    if not sentences_with_pos:
+        return ""
+    
+    # Score sentences
+    def score_sentence(pos_sent):
+        pos, sent = pos_sent
+        score = 0
+        sent_lower = sent.lower()
+        
+        # Position bonus (earlier sentences more important)
+        if pos == 0:
+            score += 100  # First sentence is usually the lede
+        elif pos < 3:
+            score += 50
+        elif pos < 6:
+            score += 20
+        
+        # Length preference - not too short, not too long
+        words = len(sent.split())
+        if 15 <= words <= 40:
+            score += 10
+        
+        # Content indicators
+        important_terms = [
+            "announced", "released", "reported", "said", "according to",
+            "study", "research", "found", "discovered", "revealed",
+            "new", "first", "major", "significant", "important",
+            "will", "plans to", "expected", "predicted",
+            "because", "due to", "caused by", "result of",
+            "however", "although", "despite", "while",
+            "for example", "such as", "including",
+            "company", "organization", "government", "officials",
+            "million", "billion", "percent", "growth", "decline",
+        ]
+        for term in important_terms:
+            if term in sent_lower:
+                score += 5
+        
+        # Penalize certain patterns
+        skip_patterns = [
+            "read more", "click here", "sign up", "subscribe",
+            "follow us", "share this", "related articles",
+            "advertisement", "sponsored", "click to",
+            "image credit", "photo by", "source:",
+        ]
+        for pattern in skip_patterns:
+            if pattern in sent_lower:
+                score -= 50
+        
+        return score
+    
+    # Score and sort
+    scored = [(score_sentence(s), s[1]) for s in sentences_with_pos]
+    scored.sort(reverse=True)
+    
+    # Take top sentences
+    top_sentences = [s[1] for s in scored[:max_sentences]]
+    
+    # Re-sort by original position for coherent flow
+    original_order = []
+    for sent in top_sentences:
+        for pos, original_sent in sentences_with_pos:
+            if sent == original_sent:
+                original_order.append((pos, sent))
+                break
+    
+    original_order.sort()
+    
+    summary = " ".join([s[1] for s in original_order])
+    return summary
+
+
 class PaywallDetector:
     """Detect paywalled sites and paywall gateway patterns in URLs."""
 
@@ -921,6 +1711,82 @@ class PaywallDetector:
         r"wired\.com",
         r"thetimes\.co\.uk",
         r"telegraph\.co\.uk",
+        # Additional news sites
+        r"theguardian\.com",
+        r"latimes\.com",
+        r"chicagotribune\.com",
+        r"bostonglobe\.com",
+        r"seattletimes\.com",
+        r"mercurynews\.com",
+        r"denverpost\.com",
+        r"dallasnews\.com",
+        r"inquirer\.com",
+        r"startribune\.com",
+        r"jsonline\.com",
+        # Business/Financial
+        r"businessinsider\.com",
+        r"forbes\.com",
+        r"marketwatch\.com",
+        r"seekingalpha\.com",
+        r"barrons\.com",
+        r"financialpost\.com",
+        r"morningstar\.com",
+        r"kiplinger\.com",
+        r"fortune\.com",
+        r"fastcompany\.com",
+        r"inc\.com",
+        r"entrepreneur\.com",
+        # Technology/Science
+        r"technologyreview\.com",
+        r"scientificamerican\.com",
+        r"nature\.com",
+        r"science\.org",
+        r"ieee\.org",
+        r"acm\.org",
+        r"spectrum\.ieee\.org",
+        r"newscientist\.com",
+        # Premium news
+        r"foreignpolicy\.com",
+        r"theinformation\.com",
+        r"axios\.com",
+        r"politico\.com",
+        r"statnews\.com",
+        r"law360\.com",
+        r"propublica\.org",
+        # International
+        r"irishtimes\.com",
+        r"spiegel\.de",
+        r"zeit\.de",
+        r"faz\.net",
+        r"lemonde\.fr",
+        r"corriere\.it",
+        r"elpais\.com",
+        r"scmp\.com",
+        r"afr\.com",
+        r"theaustralian\.com\.au",
+        r"smh\.com\.au",
+        # Magazines
+        r"vanityfair\.com",
+        r"gq\.com",
+        r"esquire\.com",
+        r"time\.com",
+        r"rollingstone\.com",
+        r"billboard\.com",
+        # Academic
+        r"chronicle\.com",
+        r"insidehighered\.com",
+        r"timeshighereducation\.com",
+        r"jstor\.org",
+        # Sports
+        r"theathletic\.com",
+        r"espn\.com",
+        r"espnplus\.com",
+        # Entertainment
+        r"variety\.com",
+        r"hollywoodreporter\.com",
+        r"deadline\.com",
+        r"pitchfork\.com",
+        r"vulture\.com",
     ]
 
     # URL path patterns that indicate paywall gateways

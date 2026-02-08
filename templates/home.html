@@ -6,7 +6,7 @@
 /* Hero Section */
 .hero {
     text-align: center;
-    padding: 80px 24px 60px;
+    padding: 80px 24px 40px;
     opacity: 0;
     animation: fadeIn 0.6s ease forwards;
 }
@@ -44,7 +44,7 @@
 /* URL Form */
 .url-form {
     max-width: 560px;
-    margin: 0 auto 64px;
+    margin: 0 auto 40px;
     padding: 0 24px;
     opacity: 0;
     animation: fadeIn 0.6s ease 0.15s forwards;
@@ -143,9 +143,195 @@
     color: white;
 }
 
+/* Search Bar */
+.search-bar {
+    max-width: 560px;
+    margin: 0 auto 24px;
+    padding: 0 24px;
+    opacity: 0;
+    animation: fadeIn 0.6s ease 0.2s forwards;
+}
+
+.search-input-wrapper {
+    position: relative;
+}
+
+.search-input {
+    width: 100%;
+    padding: 14px 20px 14px 48px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.95rem;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: all 0.25s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 2px 12px var(--shadow-color);
+}
+
+.search-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    color: var(--text-muted);
+}
+
+.clear-search {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 4px 8px;
+    display: none;
+}
+
+.clear-search:hover {
+    color: var(--text-color);
+}
+
+/* Filter Bar */
+.filter-bar {
+    max-width: 860px;
+    margin: 0 auto 24px;
+    padding: 0 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    justify-content: space-between;
+    opacity: 0;
+    animation: fadeIn 0.6s ease 0.25s forwards;
+}
+
+.sort-options {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.sort-label {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.sort-select {
+    padding: 8px 12px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.875rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+.sort-select:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+.favorites-filter {
+    display: flex;
+    gap: 8px;
+}
+
+.filter-btn {
+    padding: 8px 16px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    background-color: var(--bg-color);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.filter-btn:hover {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+}
+
+.filter-btn.active {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+    color: white;
+}
+
+/* Batch Operations */
+.batch-bar {
+    max-width: 860px;
+    margin: 0 auto 16px;
+    padding: 12px 24px;
+    background-color: var(--bg-secondary);
+    border-radius: 10px;
+    display: none;
+    align-items: center;
+    gap: 16px;
+    opacity: 0;
+    animation: fadeIn 0.3s ease forwards;
+}
+
+.batch-bar.active {
+    display: flex;
+}
+
+.batch-count {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.batch-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.batch-btn {
+    padding: 8px 16px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--bg-color);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.batch-btn:hover {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+    color: white;
+}
+
+.batch-btn.danger:hover {
+    background-color: #DC3545;
+    border-color: #DC3545;
+}
+
 /* Articles Section */
 .articles-section {
-    max-width: 560px;
+    max-width: 860px;
     margin: 0 auto;
     padding: 0 24px 80px;
     opacity: 0;
@@ -186,21 +372,34 @@
 }
 
 .article-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
     gap: 16px;
-    padding: 20px 0;
-    border-bottom: 1px solid var(--border-color);
+    align-items: start;
+    padding: 20px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    background-color: var(--bg-color);
     transition: all 0.2s ease;
 }
 
-.article-item:last-child {
-    border-bottom: none;
+.article-item:hover {
+    border-color: var(--accent-color);
+    box-shadow: 0 2px 12px var(--shadow-color);
+}
+
+.article-checkbox {
+    margin-top: 4px;
+}
+
+.article-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
 }
 
 .article-info {
-    flex: 1;
     min-width: 0;
 }
 
@@ -227,10 +426,11 @@
 .article-meta {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
     margin-top: 8px;
     font-size: 0.8125rem;
     color: var(--text-muted);
+    flex-wrap: wrap;
 }
 
 .article-date {
@@ -245,7 +445,69 @@
     opacity: 0.6;
 }
 
-/* Delete Button */
+.reading-time {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.reading-time svg {
+    width: 14px;
+    height: 14px;
+    opacity: 0.6;
+}
+
+.article-summary {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    margin-top: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+/* Article Actions */
+.article-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-action {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 8px;
+    background-color: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.btn-action:hover {
+    background-color: var(--bg-secondary);
+    color: var(--text-color);
+}
+
+.btn-action.favorite.active {
+    color: #F5A623;
+}
+
+.btn-action.favorite.active:hover {
+    background-color: rgba(245, 166, 35, 0.15);
+}
+
+.btn-action.delete:hover {
+    background-color: #FDECEA;
+    color: #DC3545;
+}
+
+/* Delete Button (legacy) */
 .btn-delete {
     flex-shrink: 0;
     width: 36px;
@@ -313,7 +575,7 @@ body.night-mode .btn-delete:hover {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
-    margin-top: 6px;
+    margin-top: 8px;
 }
 
 .tag-small {
@@ -330,6 +592,53 @@ body.night-mode .btn-delete:hover {
 
 .tag-small:hover {
     color: var(--accent-color);
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-color);
+}
+
+.page-btn {
+    padding: 8px 14px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--bg-color);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.page-btn:hover {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+}
+
+.page-btn.active {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+    color: white;
+}
+
+.page-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.page-info {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    padding: 0 12px;
 }
 
 /* Empty State */
@@ -351,10 +660,60 @@ body.night-mode .btn-delete:hover {
     margin: 0;
 }
 
+/* Flash Messages */
+.flash-messages {
+    max-width: 560px;
+    margin: 0 auto 24px;
+    padding: 0 24px;
+}
+
+.flash-message {
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+}
+
+.flash-message.success {
+    background-color: #D4EDDA;
+    color: #155724;
+    border: 1px solid #C3E6CB;
+}
+
+.flash-message.error {
+    background-color: #F8D7DA;
+    color: #721C24;
+    border: 1px solid #F5C6CB;
+}
+
+.flash-message.info {
+    background-color: #D1ECF1;
+    color: #0C5460;
+    border: 1px solid #BEE5EB;
+}
+
+body.night-mode .flash-message.success {
+    background-color: rgba(40, 167, 69, 0.15);
+    color: #7FD99A;
+    border-color: rgba(40, 167, 69, 0.3);
+}
+
+body.night-mode .flash-message.error {
+    background-color: rgba(220, 53, 69, 0.15);
+    color: #F5A3AA;
+    border-color: rgba(220, 53, 69, 0.3);
+}
+
+body.night-mode .flash-message.info {
+    background-color: rgba(23, 162, 184, 0.15);
+    color: #7DD3E8;
+    border-color: rgba(23, 162, 184, 0.3);
+}
+
 /* Mobile Responsive */
 @media (max-width: 640px) {
     .hero {
-        padding: 60px 24px 40px;
+        padding: 60px 24px 32px;
     }
 
     .hero h1 {
@@ -370,7 +729,25 @@ body.night-mode .btn-delete:hover {
     }
 
     .url-form {
-        margin-bottom: 48px;
+        margin-bottom: 32px;
+    }
+
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .sort-options {
+        justify-content: space-between;
+    }
+
+    .article-item {
+        grid-template-columns: auto 1fr;
+    }
+
+    .article-actions {
+        grid-column: span 2;
+        justify-content: flex-end;
     }
 
     .article-link {
@@ -390,6 +767,89 @@ body.night-mode .btn-delete:hover {
         width: 40px;
         height: 40px;
     }
+}
+
+/* Keyboard shortcuts help */
+.keyboard-help {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 100;
+}
+
+.keyboard-help-btn {
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    background: var(--toolbar-bg);
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.keyboard-help-btn:hover {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+}
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal {
+    background: var(--bg-color);
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 400px;
+    width: 90%;
+    border: 1px solid var(--border-color);
+}
+
+.modal h3 {
+    margin: 0 0 16px 0;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+}
+
+.shortcut-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.shortcut-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.shortcut-list li:last-child {
+    border-bottom: none;
+}
+
+.key {
+    background: var(--bg-secondary);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.85rem;
 }
 {% endblock %}
 
@@ -428,12 +888,84 @@ body.night-mode .btn-delete:hover {
         </div>
     </form>
 
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-messages">
+        {% for category, message in messages %}
+        <div class="flash-message {{ category }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Search Bar -->
+    <div class="search-bar">
+        <div class="search-input-wrapper">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" class="search-input" id="searchInput"
+                   placeholder="Search articles..." value="{{ search_query }}"
+                   onkeypress="handleSearch(event)">
+            <button class="clear-search" id="clearSearch" onclick="clearSearch()">&times;</button>
+        </div>
+    </div>
+
+    {% if articles %}
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+        <div class="sort-options">
+            <span class="sort-label">Sort by:</span>
+            <select class="sort-select" onchange="changeSort(this.value)">
+                <option value="date" {% if sort_by == 'date' %}selected{% endif %}>Date</option>
+                <option value="title" {% if sort_by == 'title' %}selected{% endif %}>Title</option>
+                <option value="reading_time" {% if sort_by == 'reading_time' %}selected{% endif %}>Reading Time</option>
+            </select>
+            <button class="filter-btn" onclick="toggleOrder()" title="Toggle sort order">
+                {% if order == 'asc' %}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="20" x2="12" y2="10"></line>
+                    <line x1="18" y1="20" x2="18" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="16"></line>
+                </svg>
+                {% else %}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="4" x2="12" y2="14"></line>
+                    <line x1="18" y1="4" x2="18" y2="20"></line>
+                    <line x1="6" y1="4" x2="6" y2="8"></line>
+                </svg>
+                {% endif %}
+            </button>
+        </div>
+        <div class="favorites-filter">
+            <button class="filter-btn {% if favorites_only %}active{% endif %}" onclick="toggleFavorites()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="{% if favorites_only %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+                Favorites
+            </button>
+        </div>
+    </div>
+
+    <!-- Batch Operations Bar -->
+    <div class="batch-bar" id="batchBar">
+        <span class="batch-count"><span id="selectedCount">0</span> selected</span>
+        <div class="batch-actions">
+            <button class="batch-btn" onclick="batchAddTag()">Add Tag</button>
+            <button class="batch-btn" onclick="batchExport()">Export</button>
+            <button class="batch-btn danger" onclick="batchDelete()">Delete</button>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Saved Articles -->
     {% if articles %}
     <section class="articles-section">
         <div class="section-header">
             <h2>Your Library</h2>
-            <span class="article-count">{{ articles|length }}</span>
+            <span class="article-count">{{ pagination.total }}</span>
         </div>
         {% if all_tags %}
         <div class="tag-filter">
@@ -443,9 +975,12 @@ body.night-mode .btn-delete:hover {
             {% endfor %}
         </div>
         {% endif %}
-        <ul class="article-list">
+        <ul class="article-list" id="articleList">
             {% for article in articles %}
-            <li class="article-item">
+            <li class="article-item" data-id="{{ article.id }}">
+                <div class="article-checkbox">
+                    <input type="checkbox" onchange="toggleSelection({{ article.id }})" data-checkbox>
+                </div>
                 <div class="article-info">
                     <a href="/article/{{ article.id }}" class="article-link">
                         {{ article.title or article.url }}
@@ -456,9 +991,24 @@ body.night-mode .btn-delete:hover {
                                 <circle cx="12" cy="12" r="10"></circle>
                                 <polyline points="12 6 12 12 16 14"></polyline>
                             </svg>
-                            {{ article.created_at.strftime('%B %d, %Y') }}
+                            {{ article.created_at|format_date }}
                         </span>
+                        {% if article.reading_time %}
+                        <span class="reading-time">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            {{ article.reading_time }} min read
+                        </span>
+                        {% endif %}
+                        {% if article.reading_progress and article.reading_progress > 0 %}
+                        <span>{{ article.reading_progress }}% read</span>
+                        {% endif %}
                     </div>
+                    {% if article.summary %}
+                    <p class="article-summary">{{ article.summary|truncate(200) }}</p>
+                    {% endif %}
                     {% if article.tags %}
                     <div class="article-tags-small">
                         {% for tag in article.tags.split(',') %}
@@ -469,17 +1019,54 @@ body.night-mode .btn-delete:hover {
                     </div>
                     {% endif %}
                 </div>
-                <form action="/delete/{{ article.id }}" method="post" onsubmit="return confirm('Delete this article?');">
-                    <button type="submit" class="btn-delete" title="Delete article">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="3 6 5 6 21 6"></polyline>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                <div class="article-actions">
+                    <button class="btn-action favorite {% if article.is_favorite %}active{% endif %}" 
+                            onclick="toggleFavorite({{ article.id }}, this)"
+                            title="{% if article.is_favorite %}Remove from favorites{% else %}Add to favorites{% endif %}">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="{% if article.is_favorite %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                         </svg>
                     </button>
-                </form>
+                    <button class="btn-action export" onclick="exportArticle({{ article.id }})" title="Export">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                    </button>
+                    <form action="/delete/{{ article.id }}" method="post" style="display: inline;" onsubmit="return confirm('Delete this article?');">
+                        <button type="submit" class="btn-action delete" title="Delete">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
             </li>
             {% endfor %}
         </ul>
+
+        <!-- Pagination -->
+        {% if pagination.pages > 1 %}
+        <div class="pagination">
+            {% if pagination.has_prev %}
+            <a href="{{ url_for('home', page=pagination.prev_num, q=search_query, tag=active_tag, sort=sort_by, order=order, favorites=1 if favorites_only else 0) }}" 
+               class="page-btn">&larr; Prev</a>
+            {% else %}
+            <button class="page-btn" disabled>&larr; Prev</button>
+            {% endif %}
+
+            <span class="page-info">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+
+            {% if pagination.has_next %}
+            <a href="{{ url_for('home', page=pagination.next_num, q=search_query, tag=active_tag, sort=sort_by, order=order, favorites=1 if favorites_only else 0) }}" 
+               class="page-btn">Next &rarr;</a>
+            {% else %}
+            <button class="page-btn" disabled>Next &rarr;</button>
+            {% endif %}
+        </div>
+        {% endif %}
     </section>
     {% else %}
     <div class="empty-state">
@@ -491,10 +1078,267 @@ body.night-mode .btn-delete:hover {
     </div>
     {% endif %}
 </div>
+
+<!-- Keyboard Shortcuts Help -->
+<div class="keyboard-help">
+    <button class="keyboard-help-btn" onclick="showShortcuts()" title="Keyboard shortcuts">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+            <rect x="9" y="9" width="6" height="6"></rect>
+            <line x1="9" y1="1" x2="9" y2="4"></line>
+            <line x1="15" y1="1" x2="15" y2="4"></line>
+            <line x1="9" y1="20" x2="9" y2="23"></line>
+            <line x1="15" y1="20" x2="15" y2="23"></line>
+            <line x1="20" y1="9" x2="23" y2="9"></line>
+            <line x1="20" y1="14" x2="23" y2="14"></line>
+            <line x1="1" y1="9" x2="4" y2="9"></line>
+            <line x1="1" y1="14" x2="4" y2="14"></line>
+        </svg>
+    </button>
+</div>
+
+<!-- Shortcuts Modal -->
+<div class="modal-overlay" id="shortcutsModal" onclick="hideShortcuts(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+        <h3>Keyboard Shortcuts</h3>
+        <ul class="shortcut-list">
+            <li><span>Focus search</span><span class="key">/</span></li>
+            <li><span>New article</span><span class="key">n</span></li>
+            <li><span>Toggle night mode</span><span class="key">m</span></li>
+            <li><span>Next/previous page</span><span class="key">j/k</span></li>
+            <li><span>Select all</span><span class="key">Ctrl+a</span></li>
+            <li><span>Close modal</span><span class="key">Esc</span></li>
+        </ul>
+    </div>
+</div>
+
+<!-- Batch Tag Modal -->
+<div class="modal-overlay" id="batchTagModal" onclick="hideBatchTag(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+        <h3>Add Tags</h3>
+        <p style="margin-bottom: 12px; color: var(--text-secondary);">Enter tags separated by commas:</p>
+        <input type="text" id="batchTagInput" placeholder="tag1, tag2, tag3" 
+               style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 16px;">
+        <div style="display: flex; gap: 8px; justify-content: flex-end;">
+            <button class="batch-btn" onclick="hideBatchTag()">Cancel</button>
+            <button class="batch-btn" onclick="confirmBatchTag()" style="background: var(--accent-color); color: white;">Add Tags</button>
+        </div>
+    </div>
+</div>
+
+<!-- Batch Export Modal -->
+<div class="modal-overlay" id="batchExportModal" onclick="hideBatchExport(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+        <h3>Export Articles</h3>
+        <p style="margin-bottom: 16px; color: var(--text-secondary);">Choose export format:</p>
+        <div style="display: flex; gap: 8px; flex-direction: column;">
+            <button class="batch-btn" onclick="confirmBatchExport('md')" style="text-align: left;">
+                Markdown (.md) - Combined file
+            </button>
+            <button class="batch-btn" onclick="confirmBatchExport('zip')" style="text-align: left;">
+                ZIP Archive - Individual files
+            </button>
+        </div>
+        <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px;">
+            <button class="batch-btn" onclick="hideBatchExport()">Cancel</button>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
+    // Selection management
+    let selectedIds = new Set();
+
+    function toggleSelection(id) {
+        if (selectedIds.has(id)) {
+            selectedIds.delete(id);
+        } else {
+            selectedIds.add(id);
+        }
+        updateBatchBar();
+    }
+
+    function updateBatchBar() {
+        const batchBar = document.getElementById('batchBar');
+        const countEl = document.getElementById('selectedCount');
+        
+        countEl.textContent = selectedIds.size;
+        
+        if (selectedIds.size > 0) {
+            batchBar.classList.add('active');
+        } else {
+            batchBar.classList.remove('active');
+        }
+    }
+
+    function selectAll() {
+        const checkboxes = document.querySelectorAll('[data-checkbox]');
+        const allIds = Array.from(document.querySelectorAll('.article-item')).map(item => parseInt(item.dataset.id));
+        
+        if (selectedIds.size === allIds.length) {
+            // Deselect all
+            selectedIds.clear();
+            checkboxes.forEach(cb => cb.checked = false);
+        } else {
+            // Select all
+            allIds.forEach(id => selectedIds.add(id));
+            checkboxes.forEach(cb => cb.checked = true);
+        }
+        updateBatchBar();
+    }
+
+    function batchDelete() {
+        if (selectedIds.size === 0) return;
+        if (!confirm(`Delete ${selectedIds.size} article(s)?`)) return;
+        
+        fetch('/batch-delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids: Array.from(selectedIds) })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    }
+
+    function batchAddTag() {
+        if (selectedIds.size === 0) return;
+        document.getElementById('batchTagModal').classList.add('active');
+        document.getElementById('batchTagInput').focus();
+    }
+
+    function hideBatchTag(e) {
+        if (!e || e.target.id === 'batchTagModal') {
+            document.getElementById('batchTagModal').classList.remove('active');
+        }
+    }
+
+    function confirmBatchTag() {
+        const tags = document.getElementById('batchTagInput').value;
+        if (!tags.trim()) return;
+        
+        fetch('/batch-tag', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids: Array.from(selectedIds), tags: tags })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    }
+
+    function batchExport() {
+        if (selectedIds.size === 0) return;
+        document.getElementById('batchExportModal').classList.add('active');
+    }
+
+    function hideBatchExport(e) {
+        if (!e || e.target.id === 'batchExportModal') {
+            document.getElementById('batchExportModal').classList.remove('active');
+        }
+    }
+
+    function confirmBatchExport(format) {
+        fetch('/export-batch', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids: Array.from(selectedIds), format: format })
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.blob();
+            }
+            throw new Error('Export failed');
+        })
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = format === 'zip' ? 'articles-export.zip' : 'articles-export.md';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            hideBatchExport();
+        });
+    }
+
+    // Favorite toggle
+    function toggleFavorite(id, btn) {
+        fetch(`/toggle-favorite/${id}`, { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.is_favorite) {
+                btn.classList.add('active');
+                btn.querySelector('svg').setAttribute('fill', 'currentColor');
+            } else {
+                btn.classList.remove('active');
+                btn.querySelector('svg').setAttribute('fill', 'none');
+            }
+        });
+    }
+
+    // Export single article
+    function exportArticle(id) {
+        const format = prompt('Export format: md, txt, or epub?', 'md');
+        if (format) {
+            window.location.href = `/export/${id}?format=${format}`;
+        }
+    }
+
+    // Search functionality
+    function handleSearch(e) {
+        if (e.key === 'Enter') {
+            const query = e.target.value;
+            const url = new URL(window.location);
+            if (query) {
+                url.searchParams.set('q', query);
+            } else {
+                url.searchParams.delete('q');
+            }
+            window.location.href = url.toString();
+        }
+    }
+
+    function clearSearch() {
+        const url = new URL(window.location);
+        url.searchParams.delete('q');
+        window.location.href = url.toString();
+    }
+
+    // Sorting
+    function changeSort(value) {
+        const url = new URL(window.location);
+        url.searchParams.set('sort', value);
+        window.location.href = url.toString();
+    }
+
+    function toggleOrder() {
+        const url = new URL(window.location);
+        const currentOrder = url.searchParams.get('order') || 'desc';
+        url.searchParams.set('order', currentOrder === 'desc' ? 'asc' : 'desc');
+        window.location.href = url.toString();
+    }
+
+    function toggleFavorites() {
+        const url = new URL(window.location);
+        const currentFavorites = url.searchParams.get('favorites') === '1';
+        if (currentFavorites) {
+            url.searchParams.delete('favorites');
+        } else {
+            url.searchParams.set('favorites', '1');
+        }
+        window.location.href = url.toString();
+    }
+
     // Night mode control
     const nightModeBtn = document.getElementById('nightModeBtn');
     const modeIcon = document.getElementById('modeIcon');
@@ -510,6 +1354,57 @@ body.night-mode .btn-delete:hover {
         localStorage.setItem('nightMode', isNight);
     }
 
+    // Keyboard shortcuts
+    function showShortcuts() {
+        document.getElementById('shortcutsModal').classList.add('active');
+    }
+
+    function hideShortcuts(e) {
+        if (!e || e.target.id === 'shortcutsModal') {
+            document.getElementById('shortcutsModal').classList.remove('active');
+        }
+    }
+
+    document.addEventListener('keydown', function(e) {
+        // Focus search with "/"
+        if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+            e.preventDefault();
+            document.getElementById('searchInput')?.focus();
+        }
+        
+        // New article with "n"
+        if (e.key === 'n' && document.activeElement.tagName !== 'INPUT') {
+            e.preventDefault();
+            document.querySelector('.url-input')?.focus();
+        }
+        
+        // Toggle night mode with "m"
+        if (e.key === 'm' && document.activeElement.tagName !== 'INPUT') {
+            e.preventDefault();
+            toggleNightMode();
+        }
+        
+        // Next/previous page with j/k
+        if (e.key === 'j' && document.activeElement.tagName !== 'INPUT') {
+            e.preventDefault();
+            const nextBtn = document.querySelector('.page-btn:not([disabled])');
+            if (nextBtn && nextBtn.tagName === 'A') nextBtn.click();
+        }
+        
+        // Select all with Ctrl+a
+        if (e.key === 'a' && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            selectAll();
+        }
+        
+        // Close modals with Escape
+        if (e.key === 'Escape') {
+            hideShortcuts();
+            hideBatchTag();
+            hideBatchExport();
+        }
+    });
+
     // Load saved night mode preference
     document.addEventListener('DOMContentLoaded', function() {
         const savedNightMode = localStorage.getItem('nightMode');
@@ -517,6 +1412,18 @@ body.night-mode .btn-delete:hover {
             document.body.classList.add('night-mode');
             modeIcon.innerHTML = sunIcon;
             nightModeBtn.classList.add('active');
+        }
+
+        // Show clear search button if search exists
+        const searchInput = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearSearch');
+        if (searchInput && searchInput.value) {
+            clearBtn.style.display = 'block';
+        }
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                clearBtn.style.display = this.value ? 'block' : 'none';
+            });
         }
     });
 </script>
