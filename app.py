@@ -146,17 +146,15 @@ def home():
             )
         )
 
-    # Get all articles for tag extraction (before pagination)
-    all_articles_for_tags = Article.query.all()
-
-    # Collect all unique tags
+    # Collect all unique tags (query only the tags column, not full articles)
     all_tags = set()
-    for article in all_articles_for_tags:
-        if article.tags:
-            for tag in article.tags.split(","):
-                tag = tag.strip()
-                if tag:
-                    all_tags.add(tag)
+    for (tags_str,) in db.session.query(Article.tags).filter(
+        Article.tags.isnot(None), Article.tags != ""
+    ):
+        for tag in tags_str.split(","):
+            tag = tag.strip()
+            if tag:
+                all_tags.add(tag)
     all_tags = sorted(all_tags)
 
     # Apply sorting and pagination
