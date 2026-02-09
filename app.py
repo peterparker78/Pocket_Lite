@@ -1,5 +1,6 @@
 import html
 import json
+import os
 import re
 from datetime import datetime
 from functools import wraps
@@ -18,17 +19,19 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from flask_wtf.csrf import CSRFProtect
 from sqlalchemy import or_, desc, asc
 
-from utils import fetch_article_content, estimate_reading_time
+from utils import fetch_article_content, estimate_reading_time, validate_url
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///articles.db"
-app.config["SECRET_KEY"] = "your-secret-key-here-change-in-production"
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY") or os.urandom(32).hex()
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+csrf = CSRFProtect(app)
 
 # Rate limiting setup
 limiter = Limiter(
@@ -217,6 +220,12 @@ def process():
         flash("No URL provided", "error")
         return redirect(url_for("home"))
 
+    # Validate URL to prevent SSRF
+    is_valid, error_msg = validate_url(url)
+    if not is_valid:
+        flash(error_msg, "error")
+        return redirect(url_for("home"))
+
     # Check if article already exists
     existing = Article.query.filter(Article.url == url).first()
     if existing:
@@ -308,6 +317,7 @@ def delete_article(article_id):
 
 
 @app.route("/batch-delete", methods=["POST"])
+@limiter.limit("10 per minute")
 def batch_delete():
     """Delete multiple articles at once."""
     data = request.get_json()
@@ -316,12 +326,16 @@ def batch_delete():
     if not ids:
         return jsonify({"success": False, "error": "No IDs provided"})
 
+    if len(ids) > 100:
+        return jsonify({"success": False, "error": "Too many IDs (max 100)"})
+
     Article.query.filter(Article.id.in_(ids)).delete(synchronize_session=False)
     db.session.commit()
     return jsonify({"success": True, "deleted": len(ids)})
 
 
 @app.route("/batch-tag", methods=["POST"])
+@limiter.limit("10 per minute")
 def batch_tag():
     """Add tags to multiple articles at once."""
     data = request.get_json()
@@ -330,6 +344,9 @@ def batch_tag():
 
     if not ids:
         return jsonify({"success": False, "error": "No IDs provided"})
+
+    if len(ids) > 100:
+        return jsonify({"success": False, "error": "Too many IDs (max 100)"})
 
     articles = Article.query.filter(Article.id.in_(ids)).all()
     for article in articles:
@@ -343,6 +360,7 @@ def batch_tag():
 
 
 @app.route("/update-tags/<int:article_id>", methods=["POST"])
+@limiter.limit("30 per minute")
 def update_tags(article_id):
     """Update tags for an article."""
     article = Article.query.get_or_404(article_id)
@@ -354,6 +372,7 @@ def update_tags(article_id):
 
 
 @app.route("/toggle-favorite/<int:article_id>", methods=["POST"])
+@limiter.limit("30 per minute")
 def toggle_favorite(article_id):
     """Toggle favorite status for an article."""
     article = Article.query.get_or_404(article_id)
@@ -363,6 +382,7 @@ def toggle_favorite(article_id):
 
 
 @app.route("/update-notes/<int:article_id>", methods=["POST"])
+@limiter.limit("30 per minute")
 def update_notes(article_id):
     """Update personal notes for an article."""
     article = Article.query.get_or_404(article_id)
@@ -373,6 +393,7 @@ def update_notes(article_id):
 
 
 @app.route("/update-progress/<int:article_id>", methods=["POST"])
+@limiter.limit("60 per minute")
 def update_progress(article_id):
     """Update reading progress for an article."""
     article = Article.query.get_or_404(article_id)
@@ -516,7 +537,8 @@ def export_article(article_id):
             return response
 
         except Exception as e:
-            flash(f"EPUB export failed: {str(e)}", "error")
+            app.logger.error(f"EPUB export failed for article {article_id}: {e}")
+            flash("EPUB export failed. Please try another format.", "error")
             return redirect(url_for("read_article", article_id=article_id))
 
     else:
@@ -536,6 +558,9 @@ def export_batch():
 
     if not ids:
         return jsonify({"success": False, "error": "No articles selected"})
+
+    if len(ids) > 100:
+        return jsonify({"success": False, "error": "Too many articles (max 100)"})
 
     articles = Article.query.filter(Article.id.in_(ids)).all()
 
@@ -609,4 +634,4 @@ def health_check():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=os.environ.get("FLASK_DEBUG", "0") == "1")

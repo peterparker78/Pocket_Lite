@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{% block title %}Pocket Lite{% endblock %}</title>
 
     <!-- Google Fonts - Elegant Typography -->
@@ -130,8 +131,18 @@
 <body>
     {% block content %}{% endblock %}
 
+    <!-- CSRF helper for fetch calls -->
+    <script>
+        function getCsrfToken() {
+            return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        }
+        function csrfHeaders(extra) {
+            return Object.assign({'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken()}, extra || {});
+        }
+    </script>
+
     {% block extra_scripts %}{% endblock %}
-    
+
     <!-- Service Worker Registration for Offline Reading -->
     <script>
         if ('serviceWorker' in navigator) {

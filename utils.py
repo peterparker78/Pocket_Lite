@@ -1,6 +1,9 @@
 import re
 import time
 import random
+import ipaddress
+import socket
+from urllib.parse import urlparse
 from playwright.sync_api import sync_playwright
 from bs4 import BeautifulSoup
 import nh3
@@ -73,6 +76,44 @@ def estimate_reading_time(word_count):
         return 1
     minutes = word_count / 200
     return max(1, round(minutes))
+
+
+def validate_url(url):
+    """
+    Validate URL to prevent SSRF attacks.
+
+    Checks that the URL uses http/https, resolves to a public IP,
+    and does not point to internal networks or localhost.
+
+    Returns:
+        (True, None) if valid, (False, error_message) if invalid
+    """
+    try:
+        parsed = urlparse(url)
+    except Exception:
+        return False, "Invalid URL"
+
+    if parsed.scheme not in ("http", "https"):
+        return False, "Only HTTP and HTTPS URLs are allowed"
+
+    hostname = parsed.hostname
+    if not hostname:
+        return False, "No hostname in URL"
+
+    if hostname in ("localhost", "127.0.0.1", "0.0.0.0", "::1"):
+        return False, "Local URLs are not allowed"
+
+    try:
+        addr_info = socket.getaddrinfo(hostname, None, socket.AF_UNSPEC)
+        for family, type_, proto, canonname, sockaddr in addr_info:
+            ip = ipaddress.ip_address(sockaddr[0])
+            if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_link_local:
+                return False, "URLs pointing to internal networks are not allowed"
+    except socket.gaierror:
+        return False, "Could not resolve hostname"
+
+    return True, None
+
 
 # Sites with hard paywalls - try multiple bypass strategies
 HARD_PAYWALL_SITES = [
@@ -411,7 +452,6 @@ def fetch_with_selenium_no_js(url):
         options.add_argument("--disable-notifications")
 
         # Common Chrome flags for stability
-        options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-gpu")
 

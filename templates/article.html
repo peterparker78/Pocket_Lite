@@ -1087,7 +1087,7 @@
 
     // Favorite toggle
     function toggleFavorite() {
-        fetch('/toggle-favorite/{{ article_id }}', { method: 'POST' })
+        fetch('/toggle-favorite/{{ article_id }}', { method: 'POST', headers: {'X-CSRFToken': getCsrfToken()} })
         .then(response => response.json())
         .then(data => {
             const btn = document.getElementById('favoriteBtn');
@@ -1108,6 +1108,11 @@
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = '/delete/{{ article_id }}';
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrf_token';
+            csrfInput.value = getCsrfToken();
+            form.appendChild(csrfInput);
             document.body.appendChild(form);
             form.submit();
         }
@@ -1175,7 +1180,7 @@
     function saveProgress(progress) {
         fetch('/update-progress/{{ article_id }}', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: csrfHeaders(),
             body: JSON.stringify({ progress: progress })
         });
     }
@@ -1196,8 +1201,12 @@
     window.addEventListener('beforeunload', function() {
         const progress = parseInt(document.getElementById('progressBar').style.width) || 0;
         if (progress > lastSavedProgress) {
-            navigator.sendBeacon('/update-progress/{{ article_id }}', 
-                JSON.stringify({ progress: progress }));
+            fetch('/update-progress/{{ article_id }}', {
+                method: 'POST',
+                headers: csrfHeaders(),
+                body: JSON.stringify({ progress: progress }),
+                keepalive: true
+            });
         }
     });
 
@@ -1208,7 +1217,7 @@
         
         fetch('/update-notes/{{ article_id }}', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: csrfHeaders(),
             body: JSON.stringify({ notes: notes })
         })
         .then(response => response.json())
@@ -1265,7 +1274,7 @@
     function saveTags() {
         fetch('/update-tags/{{ article_id }}', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: csrfHeaders(),
             body: JSON.stringify({ tags: currentTags.join(',') })
         })
         .then(response => response.json())
