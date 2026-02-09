@@ -3,6 +3,7 @@ import time
 import random
 from playwright.sync_api import sync_playwright
 from bs4 import BeautifulSoup
+import nh3
 
 # Selenium imports
 from selenium import webdriver
@@ -748,8 +749,8 @@ def fetch_from_textise_dot_iitty(url):
     for para in paragraphs[1:] if title else paragraphs:  # Skip title if extracted
         if len(para.strip()) > 20:
             html_paragraphs.append(f"<p>{escape_html(para.strip())}</p>")
-    
-    cleaned_html = "\n".join(html_paragraphs)
+
+    cleaned_html = sanitize_html("\n".join(html_paragraphs))
     
     if not cleaned_html or len(cleaned_html.strip()) < 200:
         return None
@@ -1171,10 +1172,10 @@ def clean_article_html(element):
 
     # If we have substantial text in semantic elements, use them
     if total_text_length > 200:
-        return extract_semantic_content(soup)
+        return sanitize_html(extract_semantic_content(soup))
 
     # Fallback for legacy HTML (like paulgraham.com) - extract text and create paragraphs
-    return extract_legacy_content(soup)
+    return sanitize_html(extract_legacy_content(soup))
 
 
 def extract_semantic_content(soup):
@@ -1301,6 +1302,26 @@ def escape_html(text):
         .replace('"', "&quot;")
         .replace("'", "&#39;")
     )
+
+
+# Tags allowed in sanitized article HTML (no attributes permitted)
+SAFE_TAGS = {
+    "p", "h1", "h2", "h3", "h4", "h5", "h6",
+    "blockquote", "ul", "ol", "li", "hr",
+    "br", "em", "strong", "b", "i", "sub", "sup",
+}
+
+
+def sanitize_html(html_content):
+    """
+    Sanitize HTML to prevent stored XSS while preserving article formatting.
+
+    Uses nh3 to strip all tags except a safe whitelist and removes all
+    attributes (no onclick, onerror, style, etc.).
+    """
+    if not html_content:
+        return html_content
+    return nh3.clean(html_content, tags=SAFE_TAGS, attributes={})
 
 
 # Ad/tracking image patterns to filter out

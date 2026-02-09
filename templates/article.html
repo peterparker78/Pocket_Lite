@@ -825,7 +825,7 @@
         </svg>
     </button>
     {% if original_url %}
-    <button onclick="window.open('{{ original_url }}', '_blank')" title="Open original article">
+    <button data-url="{{ original_url }}" onclick="window.open(this.dataset.url, '_blank')" title="Open original article">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
             <polyline points="15 3 21 3 21 9"></polyline>
@@ -895,7 +895,7 @@
             {% if article_id %}
             <div class="article-tags" id="tagsContainer">
                 {% for tag in tags %}
-                <span class="tag-badge" onclick="removeTag('{{ tag }}')">{{ tag }}<span class="remove-tag">×</span></span>
+                <span class="tag-badge" data-tag="{{ tag }}" onclick="removeTag(this.dataset.tag)">{{ tag }}<span class="remove-tag">×</span></span>
                 {% endfor %}
                 <div class="tag-input-wrapper">
                     <input type="text" class="tag-input" id="tagInput" placeholder="Add tag..." onkeypress="handleTagKeypress(event)">
@@ -966,7 +966,7 @@
             {% if images %}
             <div class="images-grid">
                 {% for img in images %}
-                <div class="image-item" onclick="openLightbox('{{ img.url }}')">
+                <div class="image-item" data-img-url="{{ img.url }}" onclick="openLightbox(this.dataset.imgUrl)">
                     <img src="{{ img.url }}" alt="{{ img.alt }}" loading="lazy">
                     {% if img.caption %}
                     <div class="image-caption">{{ img.caption }}</div>
@@ -1238,15 +1238,28 @@
         const container = document.getElementById('tagsContainer');
         if (!container) return;
 
-        let html = '';
+        container.innerHTML = '';
+
         currentTags.forEach(tag => {
-            html += `<span class="tag-badge" onclick="removeTag('${tag}')">${tag}<span class="remove-tag">×</span></span>`;
+            const badge = document.createElement('span');
+            badge.className = 'tag-badge';
+            badge.dataset.tag = tag;
+            badge.addEventListener('click', function() { removeTag(this.dataset.tag); });
+
+            badge.appendChild(document.createTextNode(tag));
+
+            const removeBtn = document.createElement('span');
+            removeBtn.className = 'remove-tag';
+            removeBtn.textContent = '\u00d7';
+            badge.appendChild(removeBtn);
+
+            container.appendChild(badge);
         });
-        html += `<div class="tag-input-wrapper">
-            <input type="text" class="tag-input" id="tagInput" placeholder="Add tag..." onkeypress="handleTagKeypress(event)">
-            <button class="btn-add-tag" onclick="addTag()">Add</button>
-        </div>`;
-        container.innerHTML = html;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'tag-input-wrapper';
+        wrapper.innerHTML = '<input type="text" class="tag-input" id="tagInput" placeholder="Add tag..." onkeypress="handleTagKeypress(event)"><button class="btn-add-tag" onclick="addTag()">Add</button>';
+        container.appendChild(wrapper);
     }
 
     function saveTags() {

@@ -1,3 +1,4 @@
+import html
 import json
 import re
 from datetime import datetime
@@ -454,10 +455,13 @@ def export_article(article_id):
             # Create chapter
             c1 = epub.EpubHtml(title=article.title or "Article", file_name="article.xhtml", lang="en")
 
+            safe_title = html.escape(article.title or "Article")
+            safe_url = html.escape(article.url)
+
             html_content = f"""
             <html>
             <head>
-                <title>{article.title or "Article"}</title>
+                <title>{safe_title}</title>
                 <style>
                     body {{ font-family: Georgia, serif; line-height: 1.6; padding: 20px; max-width: 700px; margin: 0 auto; }}
                     h1 {{ font-size: 2em; margin-bottom: 0.5em; }}
@@ -466,9 +470,9 @@ def export_article(article_id):
                 </style>
             </head>
             <body>
-                <h1>{article.title or "Article"}</h1>
+                <h1>{safe_title}</h1>
                 <div class="meta">
-                    <p>Source: <a href="{article.url}">{article.url}</a></p>
+                    <p>Source: <a href="{safe_url}">{safe_url}</a></p>
                     <p>Saved: {article.created_at.strftime('%Y-%m-%d')}</p>
                 </div>
                 {article.content}
