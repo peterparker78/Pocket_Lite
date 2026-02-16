@@ -128,6 +128,7 @@ HARD_PAYWALL_SITES = [
     "theathletic.com",
     "nytimes.com/athletic",
     "wired.com",
+    "newyorker.com",
     # Additional financial/business news
     "marketwatch.com",
     "seekingalpha.com",
@@ -222,7 +223,6 @@ HARD_PAYWALL_SITES = [
     "mainichi.jp",
     "straitstimes.com",
     # Magazines
-    "newyorker.com",  # Some articles
     "vanityfair.com",
     "gq.com",
     "esquire.com",
