@@ -8,11 +8,20 @@
     <key>ProgramArguments</key>
     <array>
         <string>/Users/zahidbashir/Documents/Projects/Pocket_Lite/venv/bin/python</string>
-        <string>/Users/zahidbashir/Documents/Projects/Pocket_Lite/app.py</string>
+        <string>-c</string>
+        <string>from app import app, db; app.app_context().push(); db.create_all(); app.run(host='127.0.0.1', port=5003, threaded=True)</string>
     </array>
 
     <key>WorkingDirectory</key>
     <string>/Users/zahidbashir/Documents/Projects/Pocket_Lite</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>FLASK_DEBUG</key>
+        <string>0</string>
+        <key>PYTHONUNBUFFERED</key>
+        <string>1</string>
+    </dict>
 
     <key>RunAtLoad</key>
     <true/>

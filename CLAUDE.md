@@ -13,7 +13,8 @@ Pocket Lite is a distraction-free reading web app. Users paste a URL, and the ap
 - Flask-Migrate for database migrations
 - Flask-Limiter for rate limiting
 - Playwright for headless browser fetching (primary), Selenium as fallback
-- BeautifulSoup for HTML parsing
+- BeautifulSoup for HTML parsing, nh3 for HTML sanitization
+- Flask-WTF for CSRF protection
 - ebooklib for EPUB export
 - Jinja2 templates with inline CSS (no build step)
 
@@ -27,6 +28,9 @@ playwright install chromium
 # Run server (http://127.0.0.1:5000)
 python app.py
 
+# Run server on production port (5003) with logging
+./start_app.sh   # uses port 5003, logs to logs/app.log
+
 # Run utils.py self-tests (PaywallDetector + fetch tests, no server needed)
 python utils.py
 
@@ -38,6 +42,8 @@ python -c "from app import app, db; app.app_context().push(); db.create_all()"
 flask db upgrade
 flask db migrate -m "Description"
 ```
+
+Debug mode is controlled by `FLASK_DEBUG` env var (defaults to off). The app also has a launchd plist (`com.reader.app.plist`) for running as a macOS background service.
 
 ## Architecture
 
@@ -53,6 +59,10 @@ Key routes:
 - `GET /` — Library with filtering (tags, favorites, search), sorting (date/title/reading_time/word_count), and pagination (20/page).
 - JSON API endpoints: `/update-tags/<id>`, `/toggle-favorite/<id>`, `/update-notes/<id>`, `/update-progress/<id>`, `/batch-delete`, `/batch-tag`
 - `GET /export/<id>?format=md|txt|epub`, `POST /export-batch`
+- `GET /health` — Health check endpoint
+- `GET /search?q=` — AJAX autocomplete for article search
+
+All POST endpoints are CSRF-protected (Flask-WTF). JSON API endpoints are rate-limited (see `@limiter.limit` decorators). URL input is validated against SSRF via `validate_url()` in utils.py.
 
 ### utils.py — Content Extraction Engine
 

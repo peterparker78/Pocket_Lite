@@ -127,6 +127,7 @@ HARD_PAYWALL_SITES = [
     "telegraph.co.uk",
     "theathletic.com",
     "nytimes.com/athletic",
+    "nytimes.com",
     "wired.com",
     "newyorker.com",
     # Additional financial/business news
@@ -947,11 +948,14 @@ def fetch_article_content(url):
 
         browser.close()
 
-    # Check if content is blocked (Access Denied, 403, etc.)
+    # Check if content is blocked (Access Denied, 403, CAPTCHA, etc.)
     content_blocked = False
     if html_content:
         content_lower = html_content.lower()
-        if "access denied" in content_lower or "403 forbidden" in content_lower:
+        if ("access denied" in content_lower or 
+            "403 forbidden" in content_lower or
+            "captcha" in content_lower or
+            "datadome" in content_lower):
             content_blocked = True
             html_content = None
 
@@ -961,7 +965,10 @@ def fetch_article_content(url):
         if selenium_html:
             # Check if Selenium got blocked too
             selenium_lower = selenium_html.lower()
-            if "access denied" not in selenium_lower and "403 forbidden" not in selenium_lower:
+            if ("access denied" not in selenium_lower and 
+                "403 forbidden" not in selenium_lower and
+                "captcha" not in selenium_lower and
+                "datadome" not in selenium_lower):
                 html_content = selenium_html
 
     # If still no content, try alternative bypass services
