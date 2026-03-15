@@ -194,7 +194,6 @@ HARD_PAYWALL_SITES = [
     "statesman.com",  # Austin American-Statesman
     "dallasnews.com",
     # UK/European news
-    "theguardian.com",  # Some premium
     "independent.co.uk",
     "eveningstandard.co.uk",
     "scotsman.com",
@@ -308,6 +307,7 @@ CRAWLER_BYPASS_SITES = [
     "techcrunch.com",
     "theverge.com",
     "arstechnica.com",
+    "theguardian.com",
     "engadget.com",
     "gizmodo.com",
     "lifehacker.com",
@@ -949,12 +949,30 @@ def fetch_article_content(url):
         browser.close()
 
     # Check if content is blocked (Access Denied, 403, CAPTCHA, etc.)
+    # Use specific phrases to avoid false positives — many sites include
+    # "captcha" in config keys (e.g., recaptchaSiteKey) or CSS variables.
     content_blocked = False
     if html_content:
         content_lower = html_content.lower()
-        if ("access denied" in content_lower or 
-            "403 forbidden" in content_lower or
-            "captcha" in content_lower or
+        # Only check the visible text portion (title area) for block signals,
+        # not the entire HTML which includes scripts/config/CSS
+        soup_check = BeautifulSoup(html_content, "html.parser")
+        # Remove scripts, styles, and other non-visible elements
+        for tag in soup_check.find_all(["script", "style", "noscript", "link", "meta"]):
+            tag.decompose()
+        visible_text = soup_check.get_text().lower()
+        captcha_phrases = [
+            "complete the captcha",
+            "solve the captcha",
+            "captcha challenge",
+            "verify you are human",
+            "please verify you",
+            "one more step",
+            "checking your browser",
+        ]
+        if ("access denied" in visible_text or
+            "403 forbidden" in visible_text or
+            any(phrase in visible_text for phrase in captcha_phrases) or
             "datadome" in content_lower):
             content_blocked = True
             html_content = None
@@ -1780,7 +1798,6 @@ class PaywallDetector:
         r"thetimes\.co\.uk",
         r"telegraph\.co\.uk",
         # Additional news sites
-        r"theguardian\.com",
         r"latimes\.com",
         r"chicagotribune\.com",
         r"bostonglobe\.com",

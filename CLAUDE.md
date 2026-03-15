@@ -17,6 +17,7 @@ Pocket Lite is a distraction-free reading web app. Users paste a URL, and the ap
 - Flask-WTF for CSRF protection
 - ebooklib for EPUB export
 - Jinja2 templates with inline CSS (no build step)
+- Node.js `docx` package (via `package.json`) for DOCX export support
 
 ## Development Commands
 
@@ -43,7 +44,9 @@ flask db upgrade
 flask db migrate -m "Description"
 ```
 
-Debug mode is controlled by `FLASK_DEBUG` env var (defaults to off). The app also has a launchd plist (`com.reader.app.plist`) for running as a macOS background service.
+Debug mode is controlled by `FLASK_DEBUG` env var (defaults to off). `SECRET_KEY` is read from env or auto-generated with `os.urandom(32)`. The app also has a launchd plist (`com.reader.app.plist`) for running as a macOS background service.
+
+**Note:** `.gitignore` excludes `test_*.py` files, so tests are local-only and not committed.
 
 ## Architecture
 
@@ -95,6 +98,7 @@ The `if __name__ == "__main__"` block runs self-tests: PaywallDetector classific
 - `base.html` — All CSS variables, Google Fonts (Cormorant Garamond, Source Sans 3), night mode, service worker registration
 - `home.html` — URL input form, article library list, search, filters, sort, batch ops, pagination
 - `article.html` — Reading view with floating toolbar, collapsible sidebar (summary, notes, images, export)
+- `static/service-worker.js` — Caches articles for offline reading; registered in `base.html`
 
 ## Database Gotchas
 
