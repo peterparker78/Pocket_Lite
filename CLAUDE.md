@@ -44,7 +44,7 @@ flask db upgrade
 flask db migrate -m "Description"
 ```
 
-Debug mode is controlled by `FLASK_DEBUG` env var (defaults to off). `SECRET_KEY` is read from env or auto-generated with `os.urandom(32)`. The app also has a launchd plist (`com.reader.app.plist`) for running as a macOS background service.
+Debug mode is controlled by `FLASK_DEBUG` env var (defaults to off). `SECRET_KEY` is read from env or auto-generated with `os.urandom(32)`.
 
 **Note:** `.gitignore` excludes `test_*.py` files, so tests are local-only and not committed.
 
@@ -52,20 +52,46 @@ Debug mode is controlled by `FLASK_DEBUG` env var (defaults to off). `SECRET_KEY
 
 The app is two files: `app.py` (Flask routes + Article model) and `utils.py` (content extraction engine). Templates are in `templates/`, all CSS is inline in `base.html`.
 
-### app.py — Routes and Data Model
+### Article Model (app.py)
 
-The `Article` model stores everything: URL, title, extracted HTML content, summary, images (JSON string), tags (comma-separated string), notes, favorites, reading progress (%), word count, and reading time.
+```python
+class Article(db.Model):
+    id              # Integer, primary key
+    url             # String(500), required
+    title           # String(200)
+    content         # Text, required — clean HTML from extraction
+    summary         # Text — auto-generated sentence extraction
+    images          # Text — JSON string of [{url, alt, caption}]
+    tags            # String(500) — comma-separated (e.g. "tech,python")
+    notes           # Text — user notes
+    is_favorite     # Boolean
+    reading_progress # Integer — scroll percentage (0-100)
+    reading_time    # Integer — minutes
+    word_count      # Integer
+    created_at      # DateTime
+    updated_at      # DateTime (auto on update)
+```
 
-Key routes:
-- `POST /process` — Main entry point. Calls `fetch_article_content(url)` from utils.py, saves to DB. Rate limited: 10/min.
-- `GET /article/<id>` — Reading view. Content is stored as clean HTML from extraction.
-- `GET /` — Library with filtering (tags, favorites, search), sorting (date/title/reading_time/word_count), and pagination (20/page).
-- JSON API endpoints: `/update-tags/<id>`, `/toggle-favorite/<id>`, `/update-notes/<id>`, `/update-progress/<id>`, `/batch-delete`, `/batch-tag`
-- `GET /export/<id>?format=md|txt|epub`, `POST /export-batch`
-- `GET /health` — Health check endpoint
-- `GET /search?q=` — AJAX autocomplete for article search
+### Routes (app.py)
 
-All POST endpoints are CSRF-protected (Flask-WTF). JSON API endpoints are rate-limited (see `@limiter.limit` decorators). URL input is validated against SSRF via `validate_url()` in utils.py.
+| Route | Method | Description | Rate Limit |
+|-------|--------|-------------|------------|
+| `/` | GET | Library with filters, sort, pagination (20/page) | - |
+| `/process` | POST | Fetch and save article | 10/min |
+| `/article/<id>` | GET | Reading view | - |
+| `/search?q=` | GET | AJAX autocomplete | - |
+| `/update-tags/<id>` | POST | Update article tags | 30/min |
+| `/toggle-favorite/<id>` | POST | Toggle favorite | 30/min |
+| `/update-notes/<id>` | POST | Save notes | 30/min |
+| `/update-progress/<id>` | POST | Save reading progress | 60/min |
+| `/delete/<id>` | POST | Delete article | - |
+| `/batch-delete` | POST | Bulk delete | 10/min |
+| `/batch-tag` | POST | Bulk tag | 10/min |
+| `/export/<id>?format=md\|txt\|epub` | GET | Export single | - |
+| `/export-batch` | POST | Bulk export | - |
+| `/health` | GET | Health check | - |
+
+All POST endpoints are CSRF-protected (Flask-WTF). URL input is validated against SSRF via `validate_url()` in utils.py.
 
 ### utils.py — Content Extraction Engine
 
@@ -98,7 +124,14 @@ The `if __name__ == "__main__"` block runs self-tests: PaywallDetector classific
 - `base.html` — All CSS variables, Google Fonts (Cormorant Garamond, Source Sans 3), night mode, service worker registration
 - `home.html` — URL input form, article library list, search, filters, sort, batch ops, pagination
 - `article.html` — Reading view with floating toolbar, collapsible sidebar (summary, notes, images, export)
-- `static/service-worker.js` — Caches articles for offline reading; registered in `base.html`
+- `static/service-worker.js` — Cache-first for static assets, network-first for dynamic content, offline fallback to cached pages
+
+## Security Constraints
+
+- **SSRF**: `validate_url()` blocks non-http(s) schemes, localhost, and private IPs
+- **XSS**: `nh3.clean()` sanitizes all extracted HTML. Allowed tags: `p, h1-h6, blockquote, ul, ol, li, hr, br, em, strong, b, i, sub, sup`. No attributes permitted.
+- **CSRF**: All state-changing endpoints require CSRF token via Flask-WTF
+- **Rate Limiting**: Per-endpoint limits via Flask-Limiter (see route table above)
 
 ## Database Gotchas
 
@@ -116,9 +149,23 @@ JavaScript must use `or 0` fallbacks: `let progress = {{ reading_progress or 0 }
 
 There is also a standalone `migrate_db.py` for manual SQLite migrations (adds `summary` and `images` columns) outside of Flask-Migrate.
 
+## Deployment (macOS LaunchAgent)
+
+The app runs as a background service via `com.reader.app.plist` on port 5003:
+
+```bash
+# Install/reload the service
+ln -sf $(pwd)/com.reader.app.plist ~/Library/LaunchAgents/
+launchctl load ~/Library/LaunchAgents/com.reader.app.plist
+
+# Check status / view logs
+launchctl list | grep com.reader.app
+tail -f logs/app.log logs/error.log
+```
+
 ## Known Limitations
 
-**Cannot bypass** (server-side auth or hard bot detection): ft.com, wsj.com, economist.com, statnews.com (STAT+ articles), bloomberg.com, thetimes.co.uk
+**Cannot bypass** (server-side auth or hard bot detection): ft.com, wsj.com, economist.com, statnews.com (STAT+ articles), bloomberg.com, thetimes.co.uk, nytimes.com (DataDome CAPTCHA)
 
 **Archive.is**: CAPTCHA blocks automated access; only works for previously archived articles.
 
