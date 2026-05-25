@@ -18,6 +18,7 @@ Pocket Lite is a distraction-free reading web app. Users paste a URL, and the ap
 - ebooklib for EPUB export
 - Jinja2 templates with inline CSS (no build step)
 - Node.js `docx` package (via `package.json`) for DOCX export support
+- anthropic SDK + python-dotenv for LLM summary / auto-tagging (Claude Haiku)
 
 ## Development Commands
 
@@ -50,7 +51,9 @@ Debug mode is controlled by `FLASK_DEBUG` env var (defaults to off). `SECRET_KEY
 
 ## Architecture
 
-The app is two files: `app.py` (Flask routes + Article model) and `utils.py` (content extraction engine). Templates are in `templates/`, all CSS is inline in `base.html`.
+The app is split across: `app.py` (Flask routes + `Article` / `Highlight` models + FTS5 setup), `utils.py` (content extraction engine), `paywall_detector.py` (URL-based paywall classifier), and `llm.py` (Claude Haiku summary + tag generation). Templates are in `templates/`, all CSS is inline in `base.html`.
+
+LLM features require `ANTHROPIC_API_KEY` in env or `.env` (gitignored). Missing key degrades gracefully to the heuristic summary and no auto-tags.
 
 ### Article Model (app.py)
 
@@ -70,7 +73,22 @@ class Article(db.Model):
     word_count      # Integer
     created_at      # DateTime
     updated_at      # DateTime (auto on update)
+    highlights      # relationship -> Highlight (cascade delete)
 ```
+
+```python
+class Highlight(db.Model):
+    id              # Integer, primary key
+    article_id      # FK -> article.id (ON DELETE CASCADE)
+    text            # Text — the selected substring
+    prefix          # String(64) — 30 chars before selection, for disambiguation
+    suffix          # String(64) — 30 chars after selection
+    note            # Text — optional user note
+    color           # String(16) — default "yellow"
+    created_at      # DateTime
+```
+
+An FTS5 virtual table `article_fts(title, content, tags)` mirrors `article` via triggers. Built at startup by `init_fts()` in `app.py`. Used by `/` search filter and `/search` autocomplete via `fts_query_string()`.
 
 ### Routes (app.py)
 
@@ -79,7 +97,11 @@ class Article(db.Model):
 | `/` | GET | Library with filters, sort, pagination (20/page) | - |
 | `/process` | POST | Fetch and save article | 10/min |
 | `/article/<id>` | GET | Reading view | - |
-| `/search?q=` | GET | AJAX autocomplete | - |
+| `/search?q=` | GET | AJAX autocomplete (FTS5) | - |
+| `/article/<id>/highlights` | GET | List highlights for article | - |
+| `/article/<id>/highlights` | POST | Create highlight | 60/min |
+| `/highlights/<id>` | PUT | Update highlight note/color | 60/min |
+| `/highlights/<id>` | DELETE | Delete highlight | 60/min |
 | `/update-tags/<id>` | POST | Update article tags | 30/min |
 | `/toggle-favorite/<id>` | POST | Toggle favorite | 30/min |
 | `/update-notes/<id>` | POST | Save notes | 30/min |
@@ -101,7 +123,7 @@ The core function is `fetch_article_content(url)` which orchestrates a strategy 
 2. **Choose fetch strategy**: Googlebot UA for crawler-friendly sites → multi-strategy (Googlebot+JS, Facebook crawler, Twitter crawler, no-JS, Google referer) for hard paywalls → random UA rotation for standard sites
 3. **Playwright fetch** with request interception blocking ads/analytics/media via `BLOCKED_DOMAINS`
 4. **Fallbacks** if primary fails: Selenium (no JS), 12ft.io, Jina AI text extraction, Archive.is
-5. **Content extraction**: `clean_article_html()` strips paywall elements using `PAYWALL_ELEMENT_PATTERNS`, then tries `ARTICLE_SELECTORS` in order to find the article body
+5. **Content extraction**: `clean_article_html()` strips paywall elements using `PAYWALL_ELEMENT_PATTERNS` with token-bounded class matching (so `"modal"` matches `modal-overlay` but not `fides-overlay-modal-link-shown`), and never decomposes structural tags (`html`, `body`, `main`, `article`). Then tries `ARTICLE_SELECTORS` in order to find the article body. Text extraction uses `get_clean_text()` which preserves whitespace across inline tags (so `is <em>set</em>` stays "is set", not "isset").
 6. **Post-processing**: `extract_article_images()` filters ad/tracking images, `generate_article_summary()` scores sentences by position/keywords
 
 The `if __name__ == "__main__"` block runs self-tests: PaywallDetector classification on sample URLs, then live fetch tests using Playwright and Selenium against paulgraham.com.
@@ -165,7 +187,11 @@ tail -f logs/app.log logs/error.log
 
 ## Known Limitations
 
-**Cannot bypass** (server-side auth or hard bot detection): ft.com, wsj.com, economist.com, statnews.com (STAT+ articles), bloomberg.com, thetimes.co.uk, nytimes.com (DataDome CAPTCHA)
+**Cannot bypass** (server-side auth or hard bot detection): ft.com, wsj.com, economist.com, statnews.com (STAT+ articles), bloomberg.com, thetimes.co.uk, nytimes.com main domain (DataDome CAPTCHA — note: `nytimes.com/athletic/` *does* work).
+
+**Partial only** (Googlebot sees a multi-paragraph lede then truncates): newscientist.com.
+
+**Verified working as of 2026-05** (full article extraction via Googlebot UA strategy): wired.com, theatlantic.com, newyorker.com, hbr.org, technologyreview.com, nytimes.com/athletic, theathletic.com.
 
 **Archive.is**: CAPTCHA blocks automated access; only works for previously archived articles.
 

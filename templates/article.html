@@ -794,6 +794,76 @@
         color: #333;
     }
 }
+
+/* Highlights */
+.article-content mark.hl {
+    background-color: rgba(255, 235, 59, 0.45);
+    color: inherit;
+    padding: 0 0.05em;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+.article-content mark.hl:hover {
+    background-color: rgba(255, 200, 0, 0.65);
+}
+.article-content mark.hl.has-note {
+    border-bottom: 2px solid rgba(200, 140, 0, 0.7);
+}
+body.night-mode .article-content mark.hl {
+    background-color: rgba(255, 200, 0, 0.25);
+    color: inherit;
+}
+
+#highlightPopover {
+    position: absolute;
+    z-index: 1000;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    padding: 4px;
+    display: none;
+    gap: 4px;
+}
+#highlightPopover button {
+    border: none;
+    background: transparent;
+    padding: 6px 10px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.875rem;
+    cursor: pointer;
+    border-radius: 4px;
+}
+#highlightPopover button:hover { background: #f3f3f3; }
+body.night-mode #highlightPopover { background: #2a2a2a; border-color: #444; color: #eee; }
+body.night-mode #highlightPopover button:hover { background: #383838; }
+
+.highlights-section { margin-top: 2rem; }
+.highlights-list { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.5rem; }
+.highlight-item {
+    padding: 0.75rem;
+    background: rgba(255, 235, 59, 0.15);
+    border-left: 3px solid rgba(255, 200, 0, 0.7);
+    border-radius: 4px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+.highlight-item .hl-text { font-family: 'Cormorant Garamond', serif; font-size: 1.05rem; }
+.highlight-item .hl-note { margin-top: 0.4rem; font-style: italic; color: #555; font-size: 0.875rem; }
+.highlight-item .hl-actions { margin-top: 0.4rem; display: flex; gap: 0.5rem; }
+.highlight-item .hl-actions button {
+    border: none;
+    background: transparent;
+    color: #888;
+    cursor: pointer;
+    font-size: 0.8rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+.highlight-item .hl-actions button:hover { background: rgba(0,0,0,0.05); color: #333; }
+body.night-mode .highlight-item { background: rgba(255, 200, 0, 0.1); }
+body.night-mode .highlight-item .hl-note { color: #aaa; }
 {% endblock %}
 
 {% block content %}
@@ -979,6 +1049,23 @@
             {% endif %}
         </div>
 
+        <!-- Highlights Section -->
+        {% if article_id %}
+        <div class="highlights-section">
+            <div class="notes-header">
+                <svg class="notes-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 20h9"></path>
+                    <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                </svg>
+                <h3 class="notes-title">Highlights (<span id="highlightCount">0</span>)</h3>
+            </div>
+            <div class="highlights-list" id="highlightsList"></div>
+            <p id="highlightsEmpty" style="color:#888; font-size:0.875rem; font-style:italic;">
+                Select text in the article to add a highlight.
+            </p>
+        </div>
+        {% endif %}
+
         <!-- Export Section -->
         {% if article_id %}
         <div class="export-section">
@@ -1016,6 +1103,12 @@
         </div>
         {% endif %}
     </aside>
+</div>
+
+<!-- Highlight selection popover -->
+<div id="highlightPopover">
+    <button type="button" onclick="createHighlightFromSelection(false)">Highlight</button>
+    <button type="button" onclick="createHighlightFromSelection(true)">+ Note</button>
 </div>
 
 <!-- Lightbox for Image Viewing -->
@@ -1357,5 +1450,240 @@
             window.location.href = '/';
         }
     });
+
+    // ----- Highlights -----
+    {% if article_id %}
+    const ARTICLE_ID = {{ article_id }};
+    const highlightsListEl = document.getElementById('highlightsList');
+    const highlightCountEl = document.getElementById('highlightCount');
+    const highlightsEmptyEl = document.getElementById('highlightsEmpty');
+    const popoverEl = document.getElementById('highlightPopover');
+    const articleEl = document.getElementById('articleContent');
+    let pendingSelection = null;  // { text, prefix, suffix }
+    let highlights = [];
+
+    function escapeHtml(s) {
+        return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    function escapeRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+    // Replace the first occurrence of `needle` (preceded by `prefix`) in the
+    // article's plain text with a <mark> wrapper. Walks text nodes so we
+    // don't break existing tag structure.
+    function applyHighlight(h) {
+        const needle = h.text;
+        const prefix = h.prefix || '';
+        if (!needle) return;
+        const walker = document.createTreeWalker(articleEl, NodeFilter.SHOW_TEXT, null);
+        // Build a flat string of all text nodes with offsets
+        const nodes = [];
+        let buf = '';
+        let node;
+        while ((node = walker.nextNode())) {
+            if (node.parentElement.closest('mark.hl')) continue;
+            nodes.push({ node, start: buf.length });
+            buf += node.nodeValue;
+        }
+        const searchFor = prefix + needle;
+        const matchIdx = buf.indexOf(searchFor);
+        if (matchIdx === -1) return;
+        const startIdx = matchIdx + prefix.length;
+        const endIdx = startIdx + needle.length;
+        // Find node + offset for start and end
+        function locate(idx) {
+            for (let i = 0; i < nodes.length; i++) {
+                const n = nodes[i];
+                const nLen = n.node.nodeValue.length;
+                if (idx <= n.start + nLen) {
+                    return { node: n.node, offset: idx - n.start };
+                }
+            }
+            return null;
+        }
+        const startLoc = locate(startIdx);
+        const endLoc = locate(endIdx);
+        if (!startLoc || !endLoc) return;
+        try {
+            const range = document.createRange();
+            range.setStart(startLoc.node, startLoc.offset);
+            range.setEnd(endLoc.node, endLoc.offset);
+            // surroundContents fails if range spans multiple block elements;
+            // fall back to splitting into per-text-node wrappers
+            try {
+                const mark = document.createElement('mark');
+                mark.className = 'hl' + (h.note ? ' has-note' : '');
+                mark.dataset.id = h.id;
+                if (h.note) mark.title = h.note;
+                mark.addEventListener('click', () => openHighlightDetail(h.id));
+                range.surroundContents(mark);
+            } catch (e) {
+                // Fallback: wrap each text node fragment inside the range
+                const frag = range.extractContents();
+                const mark = document.createElement('mark');
+                mark.className = 'hl' + (h.note ? ' has-note' : '');
+                mark.dataset.id = h.id;
+                if (h.note) mark.title = h.note;
+                mark.addEventListener('click', () => openHighlightDetail(h.id));
+                mark.appendChild(frag);
+                range.insertNode(mark);
+            }
+        } catch (e) { /* ignore */ }
+    }
+
+    function renderHighlightsList() {
+        highlightCountEl.textContent = highlights.length;
+        highlightsListEl.innerHTML = '';
+        if (highlights.length === 0) {
+            highlightsEmptyEl.style.display = '';
+            return;
+        }
+        highlightsEmptyEl.style.display = 'none';
+        highlights.forEach(h => {
+            const item = document.createElement('div');
+            item.className = 'highlight-item';
+            item.dataset.id = h.id;
+            item.innerHTML = `
+                <div class="hl-text">${escapeHtml(h.text)}</div>
+                ${h.note ? `<div class="hl-note">${escapeHtml(h.note)}</div>` : ''}
+                <div class="hl-actions">
+                    <button data-action="edit">${h.note ? 'Edit note' : 'Add note'}</button>
+                    <button data-action="delete">Delete</button>
+                </div>
+            `;
+            item.querySelector('[data-action="edit"]').addEventListener('click', () => editHighlightNote(h.id));
+            item.querySelector('[data-action="delete"]').addEventListener('click', () => deleteHighlight(h.id));
+            highlightsListEl.appendChild(item);
+        });
+    }
+
+    function loadHighlights() {
+        fetch(`/article/${ARTICLE_ID}/highlights`)
+            .then(r => r.json())
+            .then(data => {
+                highlights = data || [];
+                renderHighlightsList();
+                highlights.forEach(applyHighlight);
+            });
+    }
+
+    function getSelectionContext() {
+        const sel = window.getSelection();
+        if (!sel || sel.isCollapsed) return null;
+        const text = sel.toString().trim();
+        if (!text || text.length < 2) return null;
+        const range = sel.getRangeAt(0);
+        if (!articleEl.contains(range.commonAncestorContainer)) return null;
+        // Capture context: 30 chars before/after the selection
+        const fullText = articleEl.innerText;
+        const idx = fullText.indexOf(text);
+        let prefix = '', suffix = '';
+        if (idx >= 0) {
+            prefix = fullText.slice(Math.max(0, idx - 30), idx);
+            suffix = fullText.slice(idx + text.length, idx + text.length + 30);
+        }
+        return { text, prefix, suffix, rect: range.getBoundingClientRect() };
+    }
+
+    function showPopover(rect) {
+        const top = window.scrollY + rect.top - 44;
+        const left = window.scrollX + rect.left + (rect.width / 2) - 60;
+        popoverEl.style.top = top + 'px';
+        popoverEl.style.left = left + 'px';
+        popoverEl.style.display = 'flex';
+    }
+
+    function hidePopover() {
+        popoverEl.style.display = 'none';
+        pendingSelection = null;
+    }
+
+    document.addEventListener('mouseup', function(e) {
+        if (popoverEl.contains(e.target)) return;
+        const ctx = getSelectionContext();
+        if (!ctx) { hidePopover(); return; }
+        pendingSelection = ctx;
+        showPopover(ctx.rect);
+    });
+
+    document.addEventListener('mousedown', function(e) {
+        if (!popoverEl.contains(e.target)) hidePopover();
+    });
+
+    function createHighlightFromSelection(askNote) {
+        if (!pendingSelection) return;
+        const sel = pendingSelection;
+        let note = '';
+        if (askNote) {
+            note = window.prompt('Note for this highlight:', '') || '';
+        }
+        hidePopover();
+        window.getSelection().removeAllRanges();
+        fetch(`/article/${ARTICLE_ID}/highlights`, {
+            method: 'POST',
+            headers: csrfHeaders(),
+            body: JSON.stringify({ text: sel.text, prefix: sel.prefix, suffix: sel.suffix, note })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                highlights.push(data.highlight);
+                renderHighlightsList();
+                applyHighlight(data.highlight);
+            }
+        });
+    }
+
+    function deleteHighlight(id) {
+        if (!confirm('Delete this highlight?')) return;
+        fetch(`/highlights/${id}`, { method: 'DELETE', headers: csrfHeaders() })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    highlights = highlights.filter(h => h.id !== id);
+                    // Unwrap the <mark> in the article
+                    const mark = articleEl.querySelector(`mark.hl[data-id="${id}"]`);
+                    if (mark) {
+                        const parent = mark.parentNode;
+                        while (mark.firstChild) parent.insertBefore(mark.firstChild, mark);
+                        parent.removeChild(mark);
+                        parent.normalize();
+                    }
+                    renderHighlightsList();
+                }
+            });
+    }
+
+    function editHighlightNote(id) {
+        const h = highlights.find(x => x.id === id);
+        if (!h) return;
+        const note = window.prompt('Edit note:', h.note || '');
+        if (note === null) return;
+        fetch(`/highlights/${id}`, {
+            method: 'PUT',
+            headers: csrfHeaders(),
+            body: JSON.stringify({ note })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                h.note = data.highlight.note;
+                renderHighlightsList();
+                const mark = articleEl.querySelector(`mark.hl[data-id="${id}"]`);
+                if (mark) {
+                    mark.classList.toggle('has-note', !!h.note);
+                    if (h.note) mark.title = h.note; else mark.removeAttribute('title');
+                }
+            }
+        });
+    }
+
+    function openHighlightDetail(id) {
+        const item = highlightsListEl.querySelector(`[data-id="${id}"]`);
+        if (item) item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    loadHighlights();
+    {% endif %}
 </script>
 {% endblock %}

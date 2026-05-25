@@ -8,6 +8,9 @@ from playwright.sync_api import sync_playwright
 from bs4 import BeautifulSoup
 import nh3
 
+# Re-export PaywallDetector for backward compatibility with existing imports
+from paywall_detector import PaywallDetector  # noqa: F401
+
 # Selenium imports
 from selenium import webdriver
 from selenium.webdriver.firefox.service import Service as FirefoxService
@@ -1014,6 +1017,10 @@ def fetch_article_content(url):
     # Remove paywall elements - collect first, then remove
     # Skip content elements (p, h1-h6, etc.) - some sites like Wired mark content with "paywall" class
     CONTENT_TAGS = {"p", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "li", "hr"}
+    # Never strip structural ancestors — third-party scripts (cookie banners,
+    # consent managers, ad SDKs) often add classes like "fides-overlay-modal-..."
+    # to <body>, which would otherwise nuke the entire page on a "modal" pattern hit.
+    STRUCTURAL_TAGS = {"html", "body", "main", "article"}
     elements_to_remove = []
     for element in soup.find_all(True):
         if element is None:
@@ -1022,21 +1029,29 @@ def fetch_article_content(url):
         # Skip content elements - they contain actual article text
         if element.name in CONTENT_TAGS:
             continue
+        if element.name in STRUCTURAL_TAGS:
+            continue
 
-        # Check class attribute
-        classes = element.get("class", [])
-        if isinstance(classes, list):
-            class_str = " ".join(classes).lower()
-        else:
-            class_str = str(classes).lower()
+        # Check class attribute (list of tokens) and id attribute
+        classes = element.get("class", []) or []
+        if not isinstance(classes, list):
+            classes = [str(classes)]
+        class_tokens = [c.lower() for c in classes]
+        element_id = (element.get("id", "") or "").lower()
 
-        # Check id attribute
-        element_id = element.get("id", "") or ""
-        element_id = element_id.lower()
+        # Mark for removal only if a pattern matches a *whole class token* or
+        # is a prefix of the id (e.g. "ad-container", "paywall-box"). This
+        # prevents "modal" from matching "fides-overlay-modal-link-shown".
+        def _matches(pattern):
+            for tok in class_tokens:
+                if tok == pattern or tok.startswith(pattern + "-") or tok.endswith("-" + pattern):
+                    return True
+            if element_id and (element_id == pattern or element_id.startswith(pattern + "-") or element_id.endswith("-" + pattern)):
+                return True
+            return False
 
-        # Mark for removal if matches paywall patterns
         for pattern in PAYWALL_ELEMENT_PATTERNS:
-            if pattern in class_str or pattern in element_id:
+            if _matches(pattern):
                 elements_to_remove.append(element)
                 break
 
@@ -1158,6 +1173,17 @@ def fetch_article_content(url):
     }
 
 
+def get_clean_text(element):
+    """
+    Extract text from a BeautifulSoup element preserving word boundaries
+    across inline tags. BeautifulSoup's get_text(strip=True) strips whitespace
+    from each NavigableString before concatenating, which fuses words across
+    inline elements (e.g. "is <em>set</em>" -> "isset"). This joins with a
+    space and then collapses runs of whitespace.
+    """
+    return re.sub(r"\s+", " ", element.get_text(separator=" ")).strip()
+
+
 def clean_article_html(element):
     """
     Clean article HTML: remove links, images, and unwanted elements.
@@ -1253,7 +1279,7 @@ def extract_semantic_content(soup):
             output_parts.append("<hr>")
             continue
 
-        text = el.get_text(strip=True)
+        text = get_clean_text(el)
 
         if not text or len(text) < 3:
             continue
@@ -1276,7 +1302,7 @@ def extract_semantic_content(soup):
         if el.name in ["ul", "ol"]:
             list_items = []
             for li in el.find_all("li"):
-                li_text = li.get_text(strip=True)
+                li_text = get_clean_text(li)
                 if li_text:
                     list_items.append(f"<li>{escape_html(li_text)}</li>")
             if list_items:
@@ -1694,7 +1720,7 @@ def generate_article_summary(html_content, max_sentences=5):
     position = 0
     
     for p in paragraphs:
-        text = p.get_text(strip=True)
+        text = get_clean_text(p)
         if not text:
             continue
         
@@ -1778,172 +1804,6 @@ def generate_article_summary(html_content, max_sentences=5):
     summary = " ".join([s[1] for s in original_order])
     return summary
 
-
-class PaywallDetector:
-    """Detect paywalled sites and paywall gateway patterns in URLs."""
-
-    # Known paywalled site patterns
-    PAYWALL_SITES = [
-        r"nytimes\.com",
-        r"wsj\.com",
-        r"medium\.com",
-        r"washingtonpost\.com",
-        r"hbr\.org",
-        r"economist\.com",
-        r"ft\.com",
-        r"bloomberg\.com",
-        r"theatlantic\.com",
-        r"newyorker\.com",
-        r"wired\.com",
-        r"thetimes\.co\.uk",
-        r"telegraph\.co\.uk",
-        # Additional news sites
-        r"latimes\.com",
-        r"chicagotribune\.com",
-        r"bostonglobe\.com",
-        r"seattletimes\.com",
-        r"mercurynews\.com",
-        r"denverpost\.com",
-        r"dallasnews\.com",
-        r"inquirer\.com",
-        r"startribune\.com",
-        r"jsonline\.com",
-        # Business/Financial
-        r"businessinsider\.com",
-        r"forbes\.com",
-        r"marketwatch\.com",
-        r"seekingalpha\.com",
-        r"barrons\.com",
-        r"financialpost\.com",
-        r"morningstar\.com",
-        r"kiplinger\.com",
-        r"fortune\.com",
-        r"fastcompany\.com",
-        r"inc\.com",
-        r"entrepreneur\.com",
-        # Technology/Science
-        r"technologyreview\.com",
-        r"scientificamerican\.com",
-        r"nature\.com",
-        r"science\.org",
-        r"ieee\.org",
-        r"acm\.org",
-        r"spectrum\.ieee\.org",
-        r"newscientist\.com",
-        # Premium news
-        r"foreignpolicy\.com",
-        r"theinformation\.com",
-        r"axios\.com",
-        r"politico\.com",
-        r"statnews\.com",
-        r"law360\.com",
-        r"propublica\.org",
-        # International
-        r"irishtimes\.com",
-        r"spiegel\.de",
-        r"zeit\.de",
-        r"faz\.net",
-        r"lemonde\.fr",
-        r"corriere\.it",
-        r"elpais\.com",
-        r"scmp\.com",
-        r"afr\.com",
-        r"theaustralian\.com\.au",
-        r"smh\.com\.au",
-        # Magazines
-        r"vanityfair\.com",
-        r"gq\.com",
-        r"esquire\.com",
-        r"time\.com",
-        r"rollingstone\.com",
-        r"billboard\.com",
-        # Academic
-        r"chronicle\.com",
-        r"insidehighered\.com",
-        r"timeshighereducation\.com",
-        r"jstor\.org",
-        # Sports
-        r"theathletic\.com",
-        r"espn\.com",
-        r"espnplus\.com",
-        # Entertainment
-        r"variety\.com",
-        r"hollywoodreporter\.com",
-        r"deadline\.com",
-        r"pitchfork\.com",
-        r"vulture\.com",
-    ]
-
-    # URL path patterns that indicate paywall gateways
-    GATEWAY_PATTERNS = [
-        r"/subscribe",
-        r"/subscription",
-        r"/pay",
-        r"/payment",
-        r"/login",
-        r"/signin",
-        r"/sign-in",
-        r"/premium",
-        r"/member",
-        r"/membership",
-        r"/register",
-        r"/checkout",
-        r"/unlock",
-        r"/access",
-    ]
-
-    def __init__(self):
-        # Compile regex patterns for better performance
-        self._site_pattern = re.compile(
-            "|".join(self.PAYWALL_SITES), re.IGNORECASE
-        )
-        self._gateway_pattern = re.compile(
-            "|".join(self.GATEWAY_PATTERNS), re.IGNORECASE
-        )
-
-    def is_suspected_paywall(self, url):
-        """
-        Check if URL is from a known paywalled site.
-
-        Args:
-            url: The URL string to check
-
-        Returns:
-            True if the URL matches a known paywall site pattern
-        """
-        if not url:
-            return False
-        return bool(self._site_pattern.search(url))
-
-    def contains_gateway_patterns(self, url):
-        """
-        Check if URL path contains paywall gateway keywords.
-
-        Args:
-            url: The URL string to check
-
-        Returns:
-            True if the URL contains gateway patterns like /subscribe, /pay, etc.
-        """
-        if not url:
-            return False
-        return bool(self._gateway_pattern.search(url))
-
-    def analyze(self, url):
-        """
-        Full analysis of a URL for paywall indicators.
-
-        Args:
-            url: The URL string to analyze
-
-        Returns:
-            Dict with analysis results
-        """
-        return {
-            "url": url,
-            "is_paywall_site": self.is_suspected_paywall(url),
-            "has_gateway_pattern": self.contains_gateway_patterns(url),
-        }
 
 
 if __name__ == "__main__":

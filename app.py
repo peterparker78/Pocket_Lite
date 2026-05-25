@@ -20,9 +20,10 @@ from flask_limiter.util import get_remote_address
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
-from sqlalchemy import or_, desc, asc
+from sqlalchemy import or_, desc, asc, text
 
 from utils import fetch_article_content, estimate_reading_time, validate_url
+from llm import summarize_and_tag
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///articles.db"
@@ -60,6 +61,10 @@ class Article(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    highlights = db.relationship(
+        "Highlight", backref="article", cascade="all, delete-orphan", lazy=True
+    )
+
     def to_dict(self):
         """Convert article to dictionary."""
         images = []
@@ -79,6 +84,107 @@ class Article(db.Model):
             "word_count": self.word_count,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
+
+
+class Highlight(db.Model):
+    """A user-saved text selection within an article, with an optional note."""
+
+    id = db.Column(db.Integer, primary_key=True)
+    article_id = db.Column(
+        db.Integer, db.ForeignKey("article.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    text = db.Column(db.Text, nullable=False)
+    # Short surrounding context to disambiguate duplicate matches when re-locating
+    # the highlight in the rendered article body.
+    prefix = db.Column(db.String(64), default="")
+    suffix = db.Column(db.String(64), default="")
+    note = db.Column(db.Text, default="")
+    color = db.Column(db.String(16), default="yellow")
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "text": self.text,
+            "prefix": self.prefix or "",
+            "suffix": self.suffix or "",
+            "note": self.note or "",
+            "color": self.color or "yellow",
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
+
+def init_fts():
+    """
+    Create the FTS5 virtual table mirroring article(title, content, tags),
+    plus triggers to keep it synced. Backfill on first run. Safe to call
+    on every startup — uses IF NOT EXISTS for everything.
+    """
+    with db.engine.begin() as conn:
+        conn.execute(text("""
+            CREATE VIRTUAL TABLE IF NOT EXISTS article_fts USING fts5(
+                title, content, tags,
+                content='article',
+                content_rowid='id',
+                tokenize='porter unicode61'
+            )
+        """))
+        conn.execute(text("""
+            CREATE TRIGGER IF NOT EXISTS article_ai AFTER INSERT ON article BEGIN
+                INSERT INTO article_fts(rowid, title, content, tags)
+                VALUES (new.id, new.title, new.content, new.tags);
+            END
+        """))
+        conn.execute(text("""
+            CREATE TRIGGER IF NOT EXISTS article_ad AFTER DELETE ON article BEGIN
+                INSERT INTO article_fts(article_fts, rowid, title, content, tags)
+                VALUES ('delete', old.id, old.title, old.content, old.tags);
+            END
+        """))
+        conn.execute(text("""
+            CREATE TRIGGER IF NOT EXISTS article_au AFTER UPDATE ON article BEGIN
+                INSERT INTO article_fts(article_fts, rowid, title, content, tags)
+                VALUES ('delete', old.id, old.title, old.content, old.tags);
+                INSERT INTO article_fts(rowid, title, content, tags)
+                VALUES (new.id, new.title, new.content, new.tags);
+            END
+        """))
+        # Backfill if FTS row count diverges from article count (handles
+        # both first-run and any out-of-sync index from older revisions).
+        article_n = conn.execute(text("SELECT COUNT(*) FROM article")).scalar()
+        fts_n = conn.execute(text("SELECT COUNT(*) FROM article_fts")).scalar()
+        if fts_n != article_n:
+            conn.execute(text("DELETE FROM article_fts"))
+            conn.execute(text("""
+                INSERT INTO article_fts(rowid, title, content, tags)
+                SELECT id, title, content, tags FROM article
+            """))
+            # External content tables need an explicit rebuild for the
+            # inverted index to be queryable after bulk inserts.
+            conn.execute(text("INSERT INTO article_fts(article_fts) VALUES('rebuild')"))
+
+
+def fts_query_string(user_input: str, prefix_last: bool = False) -> str:
+    """
+    Build a safe FTS5 MATCH expression from raw user input. Splits on
+    whitespace, strips FTS metacharacters, double-quotes each token so
+    things like dots, hyphens and apostrophes are treated literally.
+    With prefix_last=True the final token gets a '*' for prefix match
+    (used for autocomplete).
+    """
+    tokens = re.findall(r"[\w'\-]+", user_input or "", flags=re.UNICODE)
+    if not tokens:
+        return ""
+    parts = []
+    for i, t in enumerate(tokens):
+        t = t.replace('"', "")
+        if not t:
+            continue
+        if prefix_last and i == len(tokens) - 1:
+            parts.append(f'"{t}"*')
+        else:
+            parts.append(f'"{t}"')
+    return " ".join(parts)
 
 
 # Template filters
@@ -140,15 +246,22 @@ def home():
         base_query = base_query.filter(Article.tags.contains(tag_filter))
 
     if search_query:
-        search_pattern = f"%{search_query}%"
-        base_query = base_query.filter(
-            or_(
-                Article.title.ilike(search_pattern),
-                Article.content.ilike(search_pattern),
-                Article.url.ilike(search_pattern),
-                Article.tags.ilike(search_pattern),
-            )
-        )
+        fts_expr = fts_query_string(search_query)
+        if fts_expr:
+            matched_ids = [
+                row[0]
+                for row in db.session.execute(
+                    text("SELECT rowid FROM article_fts WHERE article_fts MATCH :q"),
+                    {"q": fts_expr},
+                ).fetchall()
+            ]
+            if matched_ids:
+                base_query = base_query.filter(Article.id.in_(matched_ids))
+            else:
+                base_query = base_query.filter(Article.id == -1)
+        else:
+            # Fall back to URL substring match when input has no FTS-usable tokens
+            base_query = base_query.filter(Article.url.ilike(f"%{search_query}%"))
 
     # Collect all unique tags (query only the tags column, not full articles)
     all_tags = set()
@@ -186,17 +299,33 @@ def search():
     if not query or len(query) < 2:
         return jsonify([])
 
-    search_pattern = f"%{query}%"
-    articles = (
-        Article.query.filter(
-            or_(
-                Article.title.ilike(search_pattern),
-                Article.tags.ilike(search_pattern),
-            )
-        )
-        .limit(10)
-        .all()
-    )
+    fts_expr = fts_query_string(query, prefix_last=True)
+    if fts_expr:
+        rows = db.session.execute(
+            text(
+                "SELECT rowid FROM article_fts "
+                "WHERE article_fts MATCH :q "
+                "ORDER BY rank LIMIT 10"
+            ),
+            {"q": f'({fts_expr}) AND (title:{fts_expr} OR tags:{fts_expr})'},
+        ).fetchall()
+        ids = [r[0] for r in rows]
+        if not ids:
+            # Fall back to body match for results that don't hit title/tags
+            rows = db.session.execute(
+                text(
+                    "SELECT rowid FROM article_fts WHERE article_fts MATCH :q "
+                    "ORDER BY rank LIMIT 10"
+                ),
+                {"q": fts_expr},
+            ).fetchall()
+            ids = [r[0] for r in rows]
+        articles = Article.query.filter(Article.id.in_(ids)).all() if ids else []
+        # Preserve FTS ranking order
+        order_map = {aid: i for i, aid in enumerate(ids)}
+        articles.sort(key=lambda a: order_map.get(a.id, 999))
+    else:
+        articles = []
 
     results = [
         {
@@ -251,6 +380,13 @@ def process():
     # Store images as JSON
     images_json = json.dumps(images) if images else ""
 
+    # Upgrade summary + suggest tags via Claude (falls back silently if no key)
+    tags_str = ""
+    llm_result = summarize_and_tag(title, content)
+    if llm_result:
+        summary = llm_result["summary"]
+        tags_str = ",".join(llm_result["tags"])
+
     # Save to database
     article = Article(
         url=url,
@@ -258,6 +394,7 @@ def process():
         content=content,
         summary=summary,
         images=images_json,
+        tags=tags_str,
         word_count=word_count,
         reading_time=reading_time,
     )
@@ -399,6 +536,67 @@ def update_progress(article_id):
     article = Article.query.get_or_404(article_id)
     data = request.get_json()
     article.reading_progress = data.get("progress", 0)
+    db.session.commit()
+    return jsonify({"success": True})
+
+
+@app.route("/article/<int:article_id>/highlights", methods=["GET"])
+def list_highlights(article_id):
+    """Return all highlights for an article as JSON."""
+    Article.query.get_or_404(article_id)
+    rows = (
+        Highlight.query.filter_by(article_id=article_id)
+        .order_by(Highlight.created_at.asc())
+        .all()
+    )
+    return jsonify([h.to_dict() for h in rows])
+
+
+@app.route("/article/<int:article_id>/highlights", methods=["POST"])
+@limiter.limit("60 per minute")
+def create_highlight(article_id):
+    """Create a new highlight on an article."""
+    Article.query.get_or_404(article_id)
+    data = request.get_json() or {}
+    text_val = (data.get("text") or "").strip()
+    if not text_val:
+        return jsonify({"success": False, "error": "Empty selection"}), 400
+    if len(text_val) > 5000:
+        return jsonify({"success": False, "error": "Selection too long"}), 400
+
+    h = Highlight(
+        article_id=article_id,
+        text=text_val,
+        prefix=(data.get("prefix") or "")[:64],
+        suffix=(data.get("suffix") or "")[:64],
+        note=(data.get("note") or "")[:2000],
+        color=(data.get("color") or "yellow")[:16],
+    )
+    db.session.add(h)
+    db.session.commit()
+    return jsonify({"success": True, "highlight": h.to_dict()})
+
+
+@app.route("/highlights/<int:highlight_id>", methods=["PUT"])
+@limiter.limit("60 per minute")
+def update_highlight(highlight_id):
+    """Update a highlight's note or color."""
+    h = Highlight.query.get_or_404(highlight_id)
+    data = request.get_json() or {}
+    if "note" in data:
+        h.note = (data.get("note") or "")[:2000]
+    if "color" in data:
+        h.color = (data.get("color") or "yellow")[:16]
+    db.session.commit()
+    return jsonify({"success": True, "highlight": h.to_dict()})
+
+
+@app.route("/highlights/<int:highlight_id>", methods=["DELETE"])
+@limiter.limit("60 per minute")
+def delete_highlight(highlight_id):
+    """Delete a highlight."""
+    h = Highlight.query.get_or_404(highlight_id)
+    db.session.delete(h)
     db.session.commit()
     return jsonify({"success": True})
 
@@ -631,6 +829,11 @@ def ratelimit_handler(e):
 def health_check():
     """Health check endpoint."""
     return jsonify({"status": "healthy", "timestamp": datetime.utcnow().isoformat()})
+
+
+with app.app_context():
+    db.create_all()  # picks up the new Highlight table without a migration
+    init_fts()
 
 
 if __name__ == "__main__":
