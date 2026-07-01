@@ -30,9 +30,9 @@
     <true/>
 
     <key>StandardOutPath</key>
-    <string>/Users/zahidbashir/Documents/Projects/Pocket_Lite/logs/app.log</string>
+    <string>/Users/zahidbashir/Library/Logs/com.reader.app/app.log</string>
 
     <key>StandardErrorPath</key>
-    <string>/Users/zahidbashir/Documents/Projects/Pocket_Lite/logs/error.log</string>
+    <string>/Users/zahidbashir/Library/Logs/com.reader.app/error.log</string>
 </dict>
 </plist>
