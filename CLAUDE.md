@@ -173,17 +173,22 @@ There is also a standalone `migrate_db.py` for manual SQLite migrations (adds `s
 
 ## Deployment (macOS LaunchAgent)
 
-The app runs as a background service via `com.reader.app.plist` on port 5003:
+The app runs as a background service via `com.reader.app.plist` on port 5003. LaunchAgent logs go to `~/Library/Logs/com.reader.app/`; only manual `./start_app.sh` runs write to the project `logs/` directory.
 
 ```bash
-# Install/reload the service
-ln -sf $(pwd)/com.reader.app.plist ~/Library/LaunchAgents/
-launchctl load ~/Library/LaunchAgents/com.reader.app.plist
+# Install/reload the service (legacy `launchctl load`/`start` is unreliable on this macOS — use the modern API)
+# COPY the plist — do NOT symlink it. A symlink into ~/Documents hits TCC at login:
+# launchd can't read the plist through it and silently skips the agent after reboot.
+cp com.reader.app.plist ~/Library/LaunchAgents/
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.reader.app.plist
+launchctl kickstart -k gui/$(id -u)/com.reader.app   # force (re)start
 
 # Check status / view logs
-launchctl list | grep com.reader.app
-tail -f logs/app.log logs/error.log
+launchctl print gui/$(id -u)/com.reader.app
+tail -f ~/Library/Logs/com.reader.app/app.log ~/Library/Logs/com.reader.app/error.log
 ```
+
+**TCC gotcha:** never point the plist's `StandardOutPath`/`StandardErrorPath` at files under `~/Documents`. launchd opens those paths itself before spawning Python; macOS TCC denies it access to files there it didn't create, and the spawn aborts with exit 78 (`EX_CONFIG`) and empty logs. Residual risk: `instance/articles.db` still lives under `~/Documents` — a future TCC reset would surface as a Python `PermissionError` in the (working) logs, not a silent failure.
 
 ## Known Limitations
 
